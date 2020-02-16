@@ -1,0 +1,318 @@
+#****************************************************************************
+#*																			*
+#*			Makefile for the OS/2 version of the HPACK archiver				*
+#*																			*
+#****************************************************************************
+
+# 32bit: Use gcc
+#		gcc 2.2.2 - Max Nilson, Max_Nilson@kcbbs.gen.nz
+#		emx - John Burnell, johnb@maths.grace.cri.nz
+# microsoft: Microsoft C (not fully tested)
+#		Microsoft C 7.0 - Chris Sullivan
+# topspeed: TopSpeed C (NB should use the TopSpeed better-make, not this makefile)
+#		TopSpeed C - John Burnell, johnb@maths.grace.cri.nz
+# watcom: Watcom C (not fully tested)
+# zortech: Zortech C
+#		Zortech C - Chris Sullivan
+
+PROJ	= hpack
+
+CFLAGS	= -c -D__OS2__ -O $(DEBUG) -I. $(CMDC)	# Flags for compiler
+
+LFLAGS	= -o $(PROJ) $(DEBUG) $(CMDL)			# Flags for linker
+
+OUTPATH	=					# Where object files go (/tmp is a good place)
+OBJ		= .o				# Extension for object files
+EXE		= .exe				# Extension for executables
+
+LD		= $(CC)				# Linker (just use the C compiler)
+LS		= dir				# Directory command
+ECHO	= echo				# Echo to screen command
+MAKE	= dmake				# The make command
+
+EMXBINDIR = d:\emx\bin		# Where EMX stuff lives
+
+# Defines for RSAREF use (needed for RSA encryption in the US).  Uncomment
+# these to build the RSAREF version of HPACK.
+
+#RSAREF		= -DRSAREF
+#RSAREF_OBJ	= $(OUTPATH)digit$(OBJ) $(OUTPATH)digit$(OBJ) \
+#			  $(OUTPATH)nn$(OBJ) $(OUTPATH)rsa$(OBJ)
+
+#****************************************************************************
+#*																			*
+#*			If no args are given, print a usage message and exit			*
+#*																			*
+#****************************************************************************
+
+default:
+		@$(ECHO) off
+		@$(ECHO) .
+		@$(ECHO) You have to enter the OS/2 compiler you want to build HPACK with.
+		@$(ECHO) Possible options are: 32bit, microsoft, topspeed, watcom, and zortech.
+		@$(ECHO) If you want to use another compiler, edit the makefile to accomodate it
+		@$(ECHO) and send a copy of any changes necessary to the author.
+
+love:
+		@$(ECHO) off
+		@$(ECHO) Nicht wahr?
+
+#****************************************************************************
+#*																			*
+#*								Rules to build HPACK						*
+#*																			*
+#****************************************************************************
+
+$(OUTPATH)arcdir$(OBJ):		arcdir.h defs.h error.h filehdr.h flags.h \
+							hpacklib.h sql.h system.h tags.h asn1/asn1.h \
+							io/fastio.h arcdir.c
+							$(CC) $(CFLAGS) arcdir.c
+
+$(OUTPATH)arcdirio$(OBJ):	arcdir.h filehdr.h choice.h defs.h error.h \
+							hpacklib.h flags.h system.h asn1/asn1.h \
+							crc/crc16.h crypt/crypt.h io/fastio.h \
+							io/hpackio.h store/store.h arcdirio.c
+							$(CC) $(CFLAGS) -DARCHIVE_TYPE=3 arcdirio.c
+
+$(OUTPATH)archive$(OBJ):	arcdir.h filehdr.h choice.h defs.h error.h \
+							filesys.h flags.h frontend.h hpacklib.h system.h \
+							tags.h asn1/asn1.h crypt/crypt.h io/fastio.h \
+							io/hpackio.h store/store.h archive.c
+							$(CC) $(CFLAGS) archive.c
+
+$(OUTPATH)cli$(OBJ):		arcdir.h choice.h defs.h error.h filehdr.h \
+							filesys.h flags.h frontend.h hpacklib.h script.h \
+							sql.h system.h wildcard.h asn1/asn1/h \
+							crypt/crypt.h io/fastio.h language/language.h \
+							cli.c
+							$(CC) $(CFLAGS) cli.c
+
+$(OUTPATH)error$(OBJ):		arcdir.h defs.h filehdr.h error.h flags.h \
+							frontend.h hpacklib.h system.h asn1/asn1.h \
+							crypt/crypt.h io/fastio.h io/hpackio.h \
+							store/store.h error.c
+							$(CC) $(CFLAGS) error.c
+
+$(OUTPATH)filesys$(OBJ):	arcdir.h defs.h error.h filehdr.h filesys.h \
+							flags.h frontend.h hpacklib.h system.h tags.h \
+							io/fastio.h io/hpackio.h filesys.c
+							$(CC) $(CFLAGS) filesys.c
+
+$(OUTPATH)frontend$(OBJ):	arcdir.h filehdr.h choice.h defs.h error.h \
+							filesys.h flags.h frontend.h hpacklib.h system.h \
+							tags.h wildcard.h asn1/asn1.h crypt/crypt.h \
+							io/fastio.h io/hpackio.h store/store.h frontend.c
+							$(CC) $(CFLAGS) frontend.c
+
+$(OUTPATH)script$(OBJ):		arcdir.h choice.h defs.h error.h filehdr.h \
+							filesys.h flags.h frontend.h hpacklib.h script.h \
+							sql.h system.h wildcard.h asn1/asn1.h \
+							io/fastio.h io/hpackio.h language/language.h \
+							script.c
+							$(CC) $(CFLAGS) script.c
+
+$(OUTPATH)sql$(OBJ):		arcdir.h choice.h defs.h filehdr.h flags.h \
+							frontend.h hpacklib.h script.h sql.h system.h \
+							asn1/asn1.h io/hpackio.h language/language.h \
+							sql.c
+							$(CC) $(CFLAGS) sql.c
+
+$(OUTPATH)tags$(OBJ):		defs.h error.h hpacklib.h system.h tags.h \
+							io/fastio.h tags.c
+							$(CC) $(CFLAGS) tags.c
+
+$(OUTPATH)os2$(OBJ):		defs.h arcdir.h filehdr.h frontend.h system.h \
+							wildcard.h hpacklib.h asn1/asn1.h crc/crc16.h \
+							io/fastio.h system/os2.c
+							$(CC) $(CFLAGS) system/os2.c
+
+$(OUTPATH)viewfile$(OBJ):	arcdir.h choice.h defs.h error.h filehdr.h \
+							flags.h frontend.h hpacklib.h sql.h system.h \
+							tags.h wildcard.h asn1/asn1.h io/fastio.h \
+							io/hpackio.h language/language.h viewfile.c
+							$(CC) $(CFLAGS) viewfile.c
+
+$(OUTPATH)wildcard$(OBJ):	defs.h system.h wildcard.h wildcard.c
+							$(CC) $(CFLAGS) wildcard.c
+
+$(OUTPATH)asn1$(OBJ):		defs.h error.h hpacklib.h asn1/asn1.h \
+							asn1/ber.h io/fastio.h asn1/asn1.c
+							$(CC) $(CFLAGS) asn1/asn1.c
+
+$(OUTPATH)memmgr$(OBJ):		defs.h hpacklib.h system.h asn1/memmgr.h \
+							asn1/memmgr.c
+							$(CC) $(CFLAGS) asn1/memgr.c
+
+$(OUTPATH)pemcode$(OBJ):	defs.h error.h frontend.h hpacklib.h script.h \
+							io/fastio.h asn1/pemcode.c
+							$(CC) $(CFLAGS) asn1/pemcode.c
+
+$(OUTPATH)pemparse$(OBJ):	defs.h script.h asn1/pemcode.h asn1/pemparse.c
+							$(CC) $(CFLAGS) asn1/pemparse.c
+
+$(OUTPATH)crc16$(OBJ):		defs.h crc/crc16.c
+							$(CC) $(CFLAGS) crc/crc16.c
+
+$(OUTPATH)crypt$(OBJ):		choice.h defs.h error.h filesys.h flags.h \
+							frontend.h hpacklib.h system.h crc/crc16.h \
+							crypt/crypt.h crypt/keymgmt.h crypt/md5.h \
+							crypt/mdc.h crypt/packet.h crypt/rsa.h \
+							crypt/shs.h io/fastio.h io/hpackio.h \
+							language/language.h crypt/crypt.c
+							$(CC) $(CFLAGS) $(RSAREF) crypt/crypt.c
+
+$(OUTPATH)keymgmt$(OBJ):	defs.h error.h frontend.h hpacklib.h system.h \
+							crc/crc16.h crypt/crypt.h crypt/md5.h \
+							crypt/mdc.h crypt/keymgmt.h crypt/shs.h \
+							io/fastio.h io/hpackio.h language/language.h \
+							crypt/keymgmt.c
+							$(CC) $(CFLAGS) crypt/keymgmt.c
+
+$(OUTPATH)md5$(OBJ):		defs.h crypt/md5.h crypt/mdc.h crypt/md5.c
+							$(CC) $(CFLAGS) crypt/md5.c
+
+$(OUTPATH)mdc$(OBJ):		defs.h error.h hpacklib.h crypt/crypt.h \
+							crypt/md5.h crypt/mdc.h crypt/shs.h crypt/mdc.c
+							$(CC) $(CFLAGS) crypt/mdc.c
+
+$(OUTPATH)rsa$(OBJ):		defs.h crypt/keymgmt.h crypt/rsa.h crypt/rsadef.h \
+							crypt/rsa.c
+							$(CC) $(CFLAGS) crypt/rsa.c
+
+$(OUTPATH)shs$(OBJ):		defs.h crypt/mdc.h crypt/shs.h crypt/shs.c
+							$(CC) $(CFLAGS) crypt/shs.c
+
+$(OUTPATH)display$(OBJ):	defs.h frontend.h hpacklib.h io/display.c
+							$(CC) $(CFLAGS) io/display.c
+
+$(OUTPATH)fastio$(OBJ):		arcdir.h defs.h error.h flags.h filehdr.h \
+							frontend.h hpacklib.h system.h asn1/asn1.h \
+							crc/crc16.h crypt/crypt.h data/ebcdic.h \
+							io/fastio.h io/hpackio.h io/fastio.c
+							$(CC) $(CFLAGS) io/fastio.c
+
+$(OUTPATH)stream$(OBJ):		defs.h hpacklib.h crc/crc16.h crypt/crypt.h \
+							io/stream.h io/stream.c
+							$(CC) $(CFLAGS) io/stream.c
+
+$(OUTPATH)language$(OBJ):	defs.h error.h filehdr.h frontend.h hpacklib.h \
+							system.h asn1/asn1.h crypt/crypt.h io/fastio.h \
+							io/hpackio.h io/stream.h language/language.h \
+							language/language.c
+							$(CC) $(CFLAGS) language/language.c
+
+$(OUTPATH)lza$(OBJ):		defs.h choice.h error.h flags.h hpacklib.h system.h \
+							crc/crc16.h crypt/crypt.h io/fastio.h \
+							io/hpackio.h lza/model.h lza/model2.h lza/model3.h \
+							lza/model4.h lza/lza.c
+							$(CC) $(CFLAGS) lza/lza.c
+
+$(OUTPATH)model$(OBJ):		defs.h error.h flags.h hpacklib.h io/hpackio.h \
+							lza/model.h lza/model.c
+							$(CC) $(CFLAGS) lza/model.c
+
+$(OUTPATH)model2$(OBJ):		defs.h lza/model2.h lza/model2.c
+							$(CC) $(CFLAGS) lza/model2.c
+
+$(OUTPATH)model3$(OBJ):		defs.h lza/model3.h lza/model3.c
+							$(CC) $(CFLAGS) lza/model3.c
+
+$(OUTPATH)model4$(OBJ):		defs.h lza/model4.h lza/model4.c
+							$(CC) $(CFLAGS) lza/model4.c
+
+$(OUTPATH)pack$(OBJ):		defs.h io/hpackio.h io/fastio.h lza/pack.c
+							$(CC) $(CFLAGS) lza/pack.c
+
+$(OUTPATH)unpack$(OBJ):		defs.h crc/crc16.h io/hpackio.h io/fastio.h \
+							lza/model.h lza/unpack.c
+							$(CC) $(CFLAGS) lza/unpack.c
+
+#$(OUTPATH)digit$(OBJ):		rsaref/digit.h rsaref/global.h rsaref/nn.h \
+#							rsaref/rsaref.h rsaref/digit.c
+#							$(CC) $(CFLAGS) -DPROTOTYPES=1 -Irsaref rsaref/digit.c
+
+#$(OUTPATH)nn$(OBJ):		rsaref/digit.h rsaref/global.h rsaref/nn.h \
+#							rsaref/rsaref.h rsaref/nn.c
+#							$(CC) $(CFLAGS) -DPROTOTYPES=1 -Irsaref rsaref/nn.c
+
+#$(OUTPATH)rsa$(OBJ):		rsaref/global.h rsaref/nn.h rsaref/rsaref.h \
+#							rsaref/r_random.h rsaref/rsa.c
+#							$(CC) $(CFLAGS) -DPROTOTYPES=1 -Irsaref rsaref/rsa.c
+
+$(OUTPATH)store$(OBJ):		defs.h error.h hpacklib.h system.h crc/crc16.h \
+							crypt/crypt.h io/fastio.h io/hpackio.h \
+							store/store.h store/store.c
+							$(CC) $(CFLAGS) store/store.c
+
+# Note: The following two rules are for emx - not sure what other compilers
+# will use (the standard 32-bit version is compiled with emx).
+
+$(PROJ):	$(OUTPATH)arcdir$(OBJ) $(OUTPATH)arcdirio$(OBJ) \
+			$(OUTPATH)archive$(OBJ) $(OUTPATH)cli$(OBJ) \
+			$(OUTPATH)display$(OBJ) $(OUTPATH)error$(OBJ) \
+			$(OUTPATH)fastio$(OBJ) $(OUTPATH)stream$(OBJ) \
+			$(OUTPATH)filesys$(OBJ) $(OUTPATH)frontend$(OBJ) \
+			$(OUTPATH)language$(OBJ) $(OUTPATH)script$(OBJ) \
+			$(OUTPATH)sql$(OBJ) $(OUTPATH)tags$(OBJ) \
+			$(OUTPATH)viewfile$(OBJ) $(OUTPATH)wildcard$(OBJ) \
+			$(OUTPATH)asn1$(OBJ) $(OUTPATH)memmgr$(OBJ) \
+			$(OUTPATH)pemcode$(OBJ) $(OUTPATH)pemparse$(OBJ) \
+			$(OUTPATH)crc16$(OBJ) $(OUTPATH)crypt$(OBJ) \
+			$(OUTPATH)keymgmt$(OBJ) $(OUTPATH)md5$(OBJ) $(OUTPATH)mdc$(OBJ) \
+			$(OUTPATH)rsa$(OBJ) $(OUTPATH)shs$(OBJ) $(OUTPATH)os2$(OBJ) \
+			$(OUTPATH)lza$(OBJ) $(OUTPATH)model$(OBJ) \
+			$(OUTPATH)model2$(OBJ) $(OUTPATH)model3$(OBJ) \
+			$(OUTPATH)model4$(OBJ) $(OUTPATH)pack$(OBJ) \
+			$(OUTPATH)unpack$(OBJ) $(OUTPATH)store$(OBJ) $(RSAREF_OBJ)
+		$(LD) $(OUTPATH)arcdir$(OBJ) $(OUTPATH)arcdirio$(OBJ) \
+		$(OUTPATH)archive$(OBJ) $(OUTPATH)cli$(OBJ) $(OUTPATH)display$(OBJ) \
+		$(OUTPATH)error$(OBJ) $(OUTPATH)fastio$(OBJ) $(OUTPATH)stream$(OBJ) \
+		$(OUTPATH)filesys$(OBJ) $(OUTPATH)frontend$(OBJ) \
+		$(OUTPATH)language$(OBJ) $(OUTPATH)script$(OBJ) \
+		$(OUTPATH)script$(OBJ) $(OUTPATH)tags$(OBJ) $(OUTPATH)viewfile$(OBJ) \
+		$(OUTPATH)wildcard$(OBJ) $(OUTPATH)asn1$(OBJ) $(OUTPATH)memmgr$(OBJ) \
+		$(OUTPATH)pemcode$(OBJ) $(OUTPATH)pemparse$(OBJ) \
+		$(OUTPATH)crc16$(OBJ) $(OUTPATH)crypt$(OBJ) $(OUTPATH)keymgmt$(OBJ) \
+		$(OUTPATH)md5$(OBJ) $(OUTPATH)mdc$(OBJ) $(OUTPATH)rsa$(OBJ) \
+		$(OUTPATH)shs$(OBJ) $(OUTPATH)os2$(OBJ) $(OUTPATH)store$(OBJ) \
+		$(OUTPATH)lza$(OBJ) $(OUTPATH)model$(OBJ) $(OUTPATH)model2$(OBJ) \
+		$(OUTPATH)model3$(OBJ) $(OUTPATH)model4$(OBJ) $(OUTPATH)pack$(OBJ) \
+		$(OUTPATH)unpack$(OBJ) $(RSAREF_OBJ) $(LFLAGS)
+
+$(PROJ)$(EXE):	$(PROJ)
+		$(EMXBINDIR)\emxbind $(EMXBINDIR)\emxl.exe $(PROJ) $(PROJ)$(EXE) -s16000
+# I am not sure what to make the stack (-s16000) - probably 8000 should be
+# plenty.
+
+#****************************************************************************
+#*																			*
+#*					Defines for each compiler/OS variation					*
+#*																			*
+#****************************************************************************
+
+# Generic 32-bit version: Use gcc/emx
+
+32bit:
+		@$(MAKE) -f makefile.os2 hpack.exe CC="gcc" CMDC="-DOS2_32 -D__GCC__" \
+				 CMDL="-los2 -v"
+
+# Microsoft C: Use cl
+
+microsoft:
+		@$(MAKE) hpack.exe CC=cl CMDC=-ml
+
+# TopSpeed C: Use tsc (NB should use the TopSpeed better-make, not this
+#			  makefile).
+
+topspeed:
+		@$(MAKE) hpack.exe CC=tsc
+
+# Watcom C: Use wc (Ba-woosh!)
+
+watcom:
+		@$(MAKE) hpack.exe CC=wc
+
+# Zortech C: Use zcc, -Ju to ignore signed/unsigned chars
+
+zortech:
+		@$(MAKE) hpack.exe CC="ztc" CMDC="-Ju -ml"

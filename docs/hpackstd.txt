@@ -1,0 +1,1466 @@
+                            HPACK Technical Information
+                            ===========================
+
+                               (HPACK Level 1 Format)
+
+                        HPACKSTD.TXT  Updated 1 July 1992
+       "Programming is like sex: One mistake and you have to support it
+                            for the rest of your life"
+
+
+The HPACK Philosophy:
+---------------------
+
+  HPACK was designed along four principles:
+
+ - Reasonable compression.
+   HPACK's compression currently outperforms all other known archivers running
+   in comparable amounts of memory.
+
+ - Archive flexibility and portability.
+   HPACK's  method  of  storing system-specific information was designed to be
+   the  most  easily  portable possible.  The HPACK format can store virtually
+   anything you care to throw at it.
+
+ - Ease of use.
+   The general rule was to only include the functionality that could be fitted
+   on a single page of help screen.
+
+ - The use of sound algorithms.
+   Adding  encryption and authentication options which people will trust their
+   data to is of little use if they can be broken in a matter of moments.
+
+The  following  document  describes  the  strategy  used  to  implement  these
+principles.
+
+This  document  describes  the  layout of the Level 1 HPACK format, which is a
+reduced version of the full HPACK format  to  enable  it  to  run  on  current
+low-end  systems  (mainly  memory-limited  MSDOS machines).  The Level 2 HPACK
+format consists of a superset  of  the  Level  1  format  which  is  specified
+entirely  using  ASN.1  (Abstract  Syntax  Notation One) and encoded using the
+Basic/Distinguished  Encoding  Rules.   The  Level  2  format   is   currently
+unimplemented  due to its need for support for things like 64 and 128-bit data
+types, and the fact that it will be  written  entirely  based  on  C++  STREAM
+objects allowing any program to easily access HPACK data files.  In general at
+the  time  of  writing  those systems which have a usable C++ compiler are too
+limited to handle the Level 2 format, and those which can handle it don't have
+a C++ compiler worth using (or don't have a C++ compiler at all).
+
+
+Archive Layout:
+---------------
+
+  A standard HPACK archive is laid out as follows:
+
+    ======================================
+          BYTE[4]: Archive ID: 'HPAK'
+    ======================================
+                File 1 data
+    --------------------------------------
+                    .
+                    .
+                    .
+    --------------------------------------
+                File n data
+    ======================================
+                Dir 1 data
+    --------------------------------------
+                    .
+                    .
+                    .
+    --------------------------------------
+                Dir n data
+    ======================================
+               Dir 1 header
+                    .
+                    .
+                    .
+               Dir n header
+    --------------------------------------
+              File 1 header
+                    .
+                    .
+                    .
+              File n header
+    --------------------------------------
+            Dirname 1, '\0'
+                    .
+                    .
+                    .
+            Dirname n, '\0'
+    --------------------------------------
+            Filename 1, '\0'
+                    .
+                    .
+                    .
+            Filename n, '\0'
+    --------------------------------------
+        WORD: No directory headers
+        WORD: No file headers
+        LONG: Length of directory block
+        WORD: Directory block checksum
+        BYTE: Special info
+        BYTE[4]: Archive ID: 'HPAK'
+    ======================================
+
+Each  archive  begins  with  the ID string 'HPAK', followed by the actual data
+stored in the archive.  These files are stored as one continuous block of  raw
+data,  with  an  optional  auxDataLength  data  block  following each block of
+archived data.  The file  and directory headers  are  in  a  format  described
+below.   The  fileNames  and  dirNames  are stored in null-terminated ASCII or
+EBCDIC (depending on the source system) format with the  extensions  described
+below.
+
+The trailer information is stored as follows:
+
+typedef struct {
+               WORD noDirHdrs;          /* No.of directory headers */
+               WORD noFileHdrs;         /* No.of file headers */
+               LONG dirInfoSize;        /* Length of archive directory block */
+               BYTE specialInfo;        /* The kludge byte */
+               WORD checksum;           /* CRC16 of dir.block */
+               BYTE archiveID[ 4 ];     /* 'HPAK' or 0x4850414B */
+               } ARCHIVE_TRAILER;
+
+The dirInfoSize block covers the combined length of the dirHdrs, fileHdrs, and
+file and directory names.  The checksum covers the dirInfoSize data as well as
+the  fields  in  the  trailer struct up to the checksum field itself (in other
+words  all  directory  information  apart from itself and the archiveID).  The
+high three bits of the byte of  special  info  currently  have  the  following
+values for the prototype versions of HPACK:
+
+  0x20 - LZW version, used for development only.
+  0x40 - LZA version.  Compression =  2.82 bits/byte (no longer used).
+  0x60 - LZA' version. Compression =  2.61 bits/byte.
+  0x80 - LZA" version. Compression = ~2.58 bits/byte (est).
+  0xA0 - MBWA prot.1.  Compression = ~2.75 bits/byte (est).
+  0xC0 - MBWA prot.2.  Compression = ~2.55 bits/byte (est).
+
+A special info ID with any of the 3 high bits set  indicates the  archive  was
+created with a prototype version of HPACK.
+
+The  release  version  of  HPACK  will use this byte as a bitfield to indicate
+various extensions to the standard format.  Currently only the low 5 bits  are
+used, the remaining high bits being used to indicate the prototype level:
+
+typedef struct {
+               unsigned multiEnd   : 1; /* Last part of multipart archive */
+               unsigned multipart  : 1; /* Part of a multipart archive */
+               unsigned secured    : 1; /* Secured archive */
+               unsigned encrypted  : 1; /* Encrypted archive */
+               unsigned blockCopr  : 1; /* Block compressed archive */
+               unsigned spare      : 3; /* Currently unused */
+               } SPECIALINFO;
+
+There  is  also a possibility that one bit will be used for to flag the use of
+the notorious 'B' format (in which  the  archive  directory  as  well  as  the
+archive data is compressed).
+
+
+Archive Directory Structure:
+----------------------------
+
+  An HPACK file header is defined in FILEHDR.H, and is arranged as follows:
+
+First,  there is a bitfield to hold information such as the system the archive
+was created on and various information pertaining to the file.  This  bitfield
+is  described as a struct, but is handled internally via bitmasks to eliminate
+any endianness problems:
+
+typedef struct {
+               unsigned origLen    : 1; /* fileLen field WORD/LONG bit */
+               unsigned coprLen    : 1; /* dataLen field WORD/LONG bit */
+               unsigned otherLen   : 2; /* dirIndex/extraLen field length */
+               unsigned isSpecial  : 1; /* Whether this is a special entry */
+               unsigned hasExtra   : 1; /* If there is extra data attached */
+               unsigned isText     : 1; /* Whether this is a text file */
+               unsigned dataFormat : 3; /* Storage type */
+               unsigned systemType : 6; /* The sys.the arc.was created on */
+               } ARCHIVEINFO;
+
+The data formats are as follows:
+
+  enum { STORED, PACKED, <5 x spare> };
+
+If  the  isSpecial  bit  is set then this entry is to be treated as a non-data
+file entry.  The file header as stored on disk is followed  by  an  additional
+WORD  which  indicates the type of the file.  All files of type SPECIAL reside
+in their own namespace, making it possible to have multiple files of the  same
+name in one directory provided their types are different.
+
+If the hasExtra bit is set,  the  header  is  followed  by  a  BYTE  with  the
+following layout:
+
+typedef struct {
+               unsigned secured     : 1; /* Data is secured */
+               unsigned encrypted   : 1; /* Data is encrypted */
+               unsigned linked      : 1; /* File is linked to other file(s) */
+               unsigned unicode     : 1; /* Filename is Unicode */
+               unsigned extraLength : 4; /* Length of extra information */
+               } EXTRAINFO;
+
+If  the  file  is  linked  to  another  file,  the link ID is stored in a WORD
+immediately following the header itself, but after the type  SPECIAL  word  if
+there  is  one  present.   All  files  with the same link ID are seperate file
+entities  which  share  common  data and in some cases common attributes.  The
+linkID is simply a magic number connecting all files with the same ID.
+
+Linked files or directories can be of two types,  anchor  nodes  or  dependant
+nodes.    An   anchor   node   contains  the  physical  data  for  the  linked
+file(s)/directorie(s).  A dependant node is a file entry which  points  to  an
+anchor node.  Each link chain must have one or more  anchor  node  (containing
+the actual file/directory data).  A link ID has the following layout:
+
+typedef struct {
+               unsigned anchor     :  1; /* Whether this is an anchor node */
+               unsigned linkID     : 15; /* Magic number for ID */
+               } LINKINFO;
+
+The extra information field is  a  deliberately  short  field  used  to  store
+mission-critical information such as the following:
+
+Apple IIgs: WORD - File type
+            LONG - Auxiliary file type
+Archimedes: WORD - File type
+Macintosh:  LONG - File type
+            LONG - File creator/owner
+
+The  extra  information is stored immediately following the header itself, but
+after the type SPECIAL word and link ID if there are any present.  If only the
+encryption, authentication, or link bits are used, the  extraLength  field  is
+set  to  0. This field also allows for the storage of very short items of data
+as pure headers of type SPECIAL only (ie with no associated data).   Currently
+this option is unused but may be used in the future.
+
+Data integrity checking is performed either by a CRC16 checksum on stored data
+or  a  checksum  calculated  by  the  LZA/MBWA  compressor  as  part  of   the
+compression/decompression  process.   The  CRC16's are only used on very short
+stored files (where their probability of  picking  up  errors  is  good);  for
+longer  files the checksum mechanism which is built into the compressor itself
+is used.  Taking into account  the  types  of  errors  that  will  occur  over
+transimission  lines,  a  16-bit CRC will catch all single bit errors, all two
+bit errors, all odd numbers of errors and all burst errors of up to  16  bits.
+The checksumming built into the compressor will by its nature detect virtually
+all  errors  (the  exact details are quite complex to explain and are based on
+the way the compressed data is encoded).
+
+The system types are as follows:
+
+enum { MSDOS, UNIX, AMIGA, MACINTOSH, ARCHIMEDES, OS2, IIGS, ATARI, VMS,
+       PRIMOS, <53x spare> };
+
+The file headers are stored as variable-length records, with  the  lengths  of
+the  fileLen,  dataLen, auxDataLen, and dirIndex fields being given by various
+bits in the archiveInfo field.  The first field  written  is  the  archiveInfo
+field  itself;  when  the  record  is  read  in,  the  length bits are used to
+determine the lengths of the fields and the  appropriate  routines  called  to
+read  in  BYTE's,  WORD's,  or LONG's.  These routines are independant of data
+endianness.  The length bits are as follows:
+
+  origLen:   0 = fileLen = WORD
+             1 = fileLen = LONG
+  coprLen:   0 = dataLen = WORD
+             1 = dataLen = LONG
+  otherLen: 00 = dirIndex = ROOT_DIR, auxDataLen = BYTE
+            01 = dirIndex = BYTE, auxDataLen = BYTE
+            10 = dirIndex = BYTE, auxDataLen = WORD
+            11 = dirIndex = WORD, auxDataLen = LONG
+
+The file header as stored in memory is as follows:
+
+typedef struct {
+               LONG fileTime;           /* Mod. date + time of the file */
+               LONG fileLen;            /* Original data length */
+               LONG dataLen;            /* Compressed data length */
+               LONG auxDataLen;         /* Auxiliary data field */
+               WORD dirIndex;           /* Where the file is in the dir.tree */
+               ARCHIVEINFO archiveInfo; /* File-specific bitflags */
+               } FILEHDR;
+
+The dataLen field is the length of the compressed data, not counting any extra
+information which may be stored in the auxDataLen field.
+
+The date field contains the modification date of the file, and  is  stored  as
+the  number  of  seconds since 00:00:00 GMT on 01/01/1970 (the time may not be
+entirely correct on systems which don't store time zone information).
+
+  An HPACK directory header  is  defined  in  FILEHDR.H,  and  is  arranged  as
+follows:
+
+  First,  there  is  a  bitfield  to  hold  information such as the system the
+archive was created on and various information pertaining to the  file.   This
+bitfield  is  described as a struct, but is handled internally via bitmasks to
+eliminate any endianness problems:
+
+typedef struct {
+               unsigned otherLen   : 2; /* parentIndex/dataLen field length */
+               unsigned isSpecial  : 1; /* Whether this is a special entry */
+               unsigned linked     : 1; /* Dir is linked to other dir(s) */
+               unsigned unicode    : 1; /* Directory name is Unicode */
+               unsigned spare      : 3; /* Reserved */
+               } DIRINFO;
+
+The directory headers are stored as variable-length records, with  the  lengths
+of  the  dataLen  and  parentIndex  fields  being  given by various bits in the
+dirInfo field.  The first field written is the dirInfo field itself;  when  the
+record  is  read  in,  the length bits are used to determine the lengths of the
+fields and the appropriate routines  called  to  read  in  BYTE's,  WORD's,  or
+LONG's.   These  routines  are independant of data endianness.  The length bits
+are as follows:
+
+  otherLen: 00 = parentIndex = ROOT_DIR, dataLen = 0
+            01 = parentIndex = BYTE, dataLen = BYTE
+            10 = parentIndex = BYTE, dataLen = WORD
+            11 = parentIndex = WORD, dataLen = LONG
+
+  The directory header as stored in memory is as follows:
+
+typedef struct {
+               LONG dirTime;      /* Mod. date + time of the directory */
+               LONG dataLen;      /* The length of the sys-specific dir.info */
+               WORD parentIndex;  /* The pointer to this directories parent */
+               BYTE dirInfo;      /* Directory-specific bitflags */
+               } DIRHDR;
+
+The dataLen LONG defines the length of the directory data field, which contains
+system-specific  information  such  as  permission bits for the directory.  The
+date field contains the modification date and time of the directory in the same
+format as the file date.
+
+If the isSpecial bit is set, it indicates that this entry is to be treated as a
+special directory entry.  The directory header as stored on disk is followed by
+an additional WORD which indicates the type of the directory.
+
+If  the  directory  is  linked to another directory, the link ID is stored in a
+WORD immediately following the header itself, but after the type  SPECIAL  word
+if  there  is  one present.  All directories with the same link ID are seperate
+directory entities which share common data and in some cases common attributes.
+The linkID is simply a magic number connecting all directories  with  the  same
+ID, and has the same format as file linkID's.
+
+  The layout of file and directory headers as  stored  within  an  archive  is
+shown  below.   All the variable or optional fields are controlled by the flag
+bits outlined above.
+
+File Header:
+
+    WORD                 : Header information bits which control the
+                           following fields.
+    None or BYTE or WORD : Index of directory file is in
+    None or BYTE or WORD or LONG : Auxiliary data size
+    LONG                 : File time
+    WORD or LONG         : Original file size
+    WORD or LONG         : Compressed file size
+
+    Optional WORD        : File type
+    Optional BYTE        : Extra header information bits which control
+                           the following fields.
+    Optional WORD        : Link ID
+    Optional variable-length field : System-specific extra information.
+
+Directory Header:
+
+    BYTE                 : Header information bits which control the
+                           following fields
+    None or BYTE or WORD : Index of directory directory is in
+    None or BYTE or WORD or LONG : Directory data size
+    LONG                 : Directory time
+
+    Optional WORD        : Directory type
+    Optional WORD        : Link ID
+
+  File  and  directory  names  are  stored  as null-terminated ASCII or EBCDIC
+strings, depending on the system they originated on.  In addition, HPACK  will
+recognise Unicode/ISO 10646 strings as file and directory  names  as  well  as
+standard  ASCII/ISO 646  or EBCDIC ones.  Unicode is used since it encompasses
+virtually  all  of  the  widely-varying  standards  for  non-ASCII  fonts  and
+character  systems  available  today.  The multibyte character set employed in
+Unicode is stored externally in big-endian format as is the rest of  the  data
+used in HPACK.
+
+HPACK  will  recognise  Unicode data in file and directory names but currently
+ignores it.
+
+
+HPACK Directory Structure:
+--------------------------
+
+  Unlike many other archivers, HPACK doesn't store directories  merely  as  an
+extension  to  a filename.  Instead, HPACK maintains a full internal directory
+tree allowing comlete reproduction of any directory structure.   The  internal
+directory  structure  which  is  laid  out  as follows (assuming the following
+sample directory structure):
+
+  / -+- A -+- B -+- C     This directory tree is encoded in a manner similar
+     |     |     |        to that of the strings in LZW compression.   Every
+     |     |     +- C1    entry contains a pointer  back  to a  chain of its
+     |     +- B1          parents.  Directories  are scanned in  depth-first
+     +- A1 -- B2          order.  The tree is  stored in a dynamically-sized
+     |                    array which also contains a list of files and sub-
+     +- A2                directories for each directory,  and  an index for
+                          the directory name in the string table.
+
+A sample run on the above directory is:
+
+         +-------------------------------+
+  +----+ +----+                          |
+  v    | v    |                          |
+A = 1, B = 2, C = 3, Pop to B (pred(C)), C1 = 4, Pop to B (pred(C1)),
+       +------------+                                  +------------+  +----+
+       v            |                                  v            |  v    |
+Pop to A (pred(B)), B1 = 5, Pop to A (pred(B1), Pop to / (pred(A)), A1 = 6, B2
+                             +-------------+
+                             v             |
+Pop to A1 (pred(B2)), Pop to / (pred(A1)), A2 = 8, Pop to / (pred(A2)), Exit.
+
+    Typical links within the array are shown below:
+
+         +-----------------+
+   +-----|-------------+   |
+   +-----|-+ +-----+   |   |
+   +---+ | | +-+   |   |   |
+   v   | v | v |   |   |   |
+  +---+|--+|--+|--+|--+|--+|--+-/  /--+---+
+  |   |   |   |   |   |   |   | /  /  |   |
+  +---+---+---+---+---+---+---+-/  /--+---+
+
+The root directory is directory 0 and is never explicitly written to  or  read
+from  disk; all subdirectories are added off the root directory, starting with
+a directory index of 1.
+
+The  directory  structure  should  be  stored  in  depth-first order, and with
+contiguous directory numbers;  there  is  code  in  ARCDIR.C  to  rebuild  the
+directory  tree in the correct order which should be called after changes have
+been made to the directory structure.
+
+
+Storing Miscellaneous Data:
+----------------------------
+
+  All  crufties in an HPACK archive are stored in a files' auxData field and a
+directories' data field in a tagged format.  Each file and directory can  have
+up  to 4GB of crufties associated with it, typically attributes, icons, access
+control information, GUI information such as window positions and  sizes,  and
+so on.
+
+The  tags  used  to  denote  the  crufties  are  either   16-bit   or   longer
+variable-length values, with the following format:
+
+  Short-format tags: These tags are of the  form  <10 bits Tag ID><6 bits data
+                     length>.  Tag ID's range from 0x000-0x3FE.
+
+  typedef struct {
+                 unsigned tagID    : 10; /* Tag ID for this tag */
+                 unsigned tagLen   : 6;  /* Length of this tag */
+                 } SHORT_TAG;
+
+  Long-format tags:  These tags have a short-format tag ID of 0x3FF,  and  are
+                     treated  as  one 24-bit value by combining the tag ID and
+                     data length fields, and the following byte.   The  actual
+                     data length is given  in  a  BYTE,  WORD  or  LONG  which
+                     follows  the  basic  tag.  If the tag data is compressed,
+                     the uncompressed data length is given in a WORD  or  LONG
+                     following the actual length.   The  size  of  the  length
+                     fields  is  indicated  by the dataLength bits, and are as
+                     follows:
+
+                       dataLen = 00   length = BYTE, uncompr.length = WORD
+                       dataLen = 01   length = WORD, uncompr.length = WORD
+                       dataLen = 10   length = WORD, uncompr.length = LONG
+                       dataLen = 11   length = LONG, uncompr.length = LONG
+
+  typdef struct {
+                unsigned longTagID : 10; /* Always 0x3FF for long-format tag */
+                unsigned dataLen   :  2; /* Length of length/ucoprLen fields */
+                unsigned dataFormat:  3; /* Storage type */
+                unsigned tagID     :  9; /* Tag ID for this tag */
+                } LONG_TAG;
+
+This  format  results  in 1023  short-form  tags and 512 long-form  tags.  Tag
+length fields cover the tagged data itself, but  not  any  parts  of  the  tag
+header.
+
+  Example of short format tag:  MSDOS attributes (1 byte):
+
+     WORD : ( MSDOS_ATTR | 1 )
+       [data: 1 byte]
+
+  Example of uncompressed long format tag: Authentication information
+        (84 bytes):
+
+     WORD : ( LONG_BASE | LONGTAG_BYTE_WORD | TAGFORMAT_STORED )
+     BYTE : SECURITY_INFO
+     BYTE : 0x54
+       [data: 84 bytes of authentication information]
+
+  Example of compressed (packed) long format tag:  Long  format  comment  (182
+        bytes, compressed to 92 bytes):
+
+     WORD : ( LONG_BASE | LONGTAG_BYTE_WORD | TAGFORMAT_PACKED )
+     BYTE : COMMENT
+     BYTE : 0x5C
+     BYTE : 0xB6
+       [data: 92 bytes of compressed comment]
+
+  Example  of  compressed  (packed)  extended  tag:  Macintosh  resource  fork
+        (269,128 bytes, compressed to 167,241 bytes):
+
+     WORD : ( LONG_BASE | LONGTAG_LONG_LONG | TAGFORMAT_PACKED )
+     BYTE : RESOURCE_FORK
+     LONG : 0x00041B48
+     LONG : 0x00028D49
+       [data: 167,241 bytes of compressed resource fork)
+
+All  tags  are  defined in the file TAGS.H, which acts as a master tags record
+for all versions of HPACK.  If an unknown tag is encountered, the tags  length
+field may be used to skip the information which it defines.
+
+Note   that   HPACK   has  routines  called  writeTag()  and  readTag()  which
+automatically sort out what types of tags to use and how to store  information
+on  lengths  etc.   The  above  information  is  provided  mainly  to  give an
+indication on how the data is actually stored within an archive.
+
+
+Encryption/Authentication Data Format:
+--------------------------------------
+
+  The  format  for  encryption/authentication  information  used  by  HPACK is
+vaguely  compatible  with  that  used  by  Philip  Zimmerman's  PGP encryption
+package.  HPACK recognises three types of security information packets:
+
+Signature packets:
+
+  A signature packet contains the algorithm ID of the signing  algorithm,  the
+key  ID  of  the  key used to create the packet, and the message digest packet
+stored as an encrypted multiprecision integer.
+
+            Algo
+  CTB  len   ID        keyID         Encrypted MPI - MD packet   crc16
+  +-+  +-+  +-+  +-+-+-+-+-+-+-+-+  +-------------------------+  +-+-+
+  | |  | |  | |  |               |  |                         |  |   |
+  +-+  +-+  +-+  +-+-+-+-+-+-+-+-+  +-------------------------+  +-+-+
+
+  A message digest information packet contains the algorithm ID of the message
+digest algorithm, the  message  digest  itself,  and a timestamp stored in the
+usual format.
+
+            Algo
+  CTB  len   ID            Message digest           Timestamp
+  +-+  +-+  +-+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+  +-+-+-+-+
+  | |  | |  | |  |                               |  |       |
+  +-+  +-+  +-+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+  +-+-+-+-+
+
+  A  message  digest  packet  may be prepended to signed data and contains the
+algorithm ID of the message digest algorithm.
+
+            Algo
+  CTB  len   ID  crc16
+  +-+  +-+  +-+  +-+-+
+  | |  | |  | |  |   |
+  +-+  +-+  +-+  +-+-+
+
+Conventional-key encryption packets:
+
+  A conventional-key encryption  packet  contains  the  algorithm  ID  of  the
+encryption algorithm and any extra keying information needed by the algorithm.
+This keying information usually takes the form of a  64-bit  IV  used  by  the
+block cipher employed for the conventional-key encryption.
+
+            Algo   Keying
+  CTB  len   ID  information crc16
+  +-+  +-+  +-+  +--------+  +-+-+
+  | |  | |  | |  |        |  |   |
+  +-+  +-+  +-+  +--------+  +-+-+
+
+Public-key encryption packets:
+
+  A  public-key  encryption packet contains the algorithm ID of the public-key
+encryption algorithm, the key ID of the key used to create the packet, and the
+conventional key encryption information stored as an encrypted  multiprecision
+integer.  Use of an IV is unnecessary  since  the  conventional-key encryption
+information contains a random key which differs for each packet.
+
+            Algo
+  CTB  len   ID        keyID         Encrypted MPI - CK encr.info   crc16
+  +-+  +-+  +-+  +-+-+-+-+-+-+-+-+  +----------------------------+  +-+-+
+  | |  | |  | |  |               |  |                            |  |   |
+  +-+  +-+  +-+  +-+-+-+-+-+-+-+-+  +----------------------------+  +-+-+
+
+  A  conventional  key  encryption  information  (DEK)  packet  contains   the
+algorithm  ID  of the encryption algorithm, and the key material needed by the
+algorithm (this varies from algorithm to algorithm).
+
+            Algo
+  CTB  len   ID          Key material
+  +-+  +-+  +-+  +-------------------------+
+  | |  | |  | |  |                         |
+  +-+  +-+  +-+  +-------------------------+
+
+  Multiprecision integers are stored in big-endian format with a 16-bit prefix
+which gives the number of significant bits.  If the bitcount is not a multiple
+of  8,  the  remaining  bits are zero-padded.  A multiprecision integer with a
+value of zero is stored with a zero in the bitcount  field  and  no  following
+value byte.
+
+  The  CTB is the cipher type byte, which specifies the type of data structure
+which follows it.  The CTB bits have the following meaning:
+
+ Bits                 Content
+  7-4     1010 - Designates the byte as a CTB
+   3      'More' bit - if set indicates another packet follows
+  2-0     Packet type field:
+          000 - Public-key-encryption packet
+          001 - Signature packet
+          010 - Message digest packet
+          011 - Message digest information packet
+          100 - Conventional-key-encryption packet
+          101 - Conventional-key-encryption information (DEK) packet
+          110 - Reserved for future use
+          111 - Reserved for future use
+
+  Data authentication information is given  by  way  of  a  signature  packet.
+Encryption information is given either by way of a conventional- or public-key
+encryption packet.
+
+
+Archive Encryption:
+-------------------
+
+  HPACK  archives  can  be  block encrypted with either public- or private-key
+encryption schemes.  The archive directory  and  archive  data  are  encrypted
+seperately,   allowing  two  levels  of  access  to  the  archive,  either  to
+information  on  the  contents  of  the  archive  (in   terms   of   directory
+information), or full access to the entire archive.
+
+  If   the  archive  is  block  encrypted,  the  archive  data  and  directory
+information areas are prefixed  with  either  a  public-  or  conventional-key
+encryption  packet  containing  the  information  necessary  to allow HPACK to
+decrypt the following data.  In addition the byte of special  info  will  have
+the  encrypted  bit  set  to  indicate that this is an encrypted archive.  The
+archive data which is encrypted begins after the initial 'HPAK' ID string  and
+ends  at  the  start of the directory information; the directory data which is
+encrypted begins at the start of the directory information  and  ends  at  the
+start  of  the  archive  trailer.   Thus  the  entire archive is enclosed in a
+security  veil  which  allows  no  access  to  any  information  without   the
+appropriate key(s) or password(s) to unlock it.
+
+
+Archive Authentication:
+-----------------------
+
+  HPACK archives can have authentication  information  attached  to  them,  in
+which case the archive layout ends as follows:
+                    .
+                    .
+                    .
+             Filename  n,  '\0'
+    --------------------------------------
+        WORD: No directory headers
+        WORD: No file headers
+        LONG: Length of directory block
+        WORD: Directory block checksum
+    --------------------------------------
+        Authentication information
+    --------------------------------------
+        WORD: Authentication info.length
+        BYTE: Special info
+        BYTE[4]: Archive ID: 'HPAK'
+    ======================================
+
+  An  extra block of data is inserted between the directory block checksum and
+the  archive  ID,  consisting  of  a  WORD  containing  the  length   of   the
+authentication  information,  and  the  authentication information itself.  In
+addition the byte of special info will have the secured bit  set  to  indicate
+that  this  is  a secured archive.  The data which is checked begins after the
+initial 'HPAK'  ID  string  and  ends  at  the  start  of  the  authentication
+information  itself; thus the entire archive is enclosed in a security wrapper
+which  it  is  computationally  infeasible  to  destroy.   The  authentication
+information  can  either be used to validate the archive, or it can be skipped
+and the archive handled as normal.  If  the  archive  is  altered,  a  warning
+should be issued that this will destroy the authentication information.
+
+  Currently  authentication is handled by generating an RSA Data Security Inc.
+MD5 message digest for the archive and signing  it  with  the  RSA  public-key
+cryptosystem.   However,  alternative forms of authentication (such as the use
+of the ElGamal PKC) can easily be substituted.
+
+
+Multipart Archives:
+-------------------
+
+  HPACK  supports  multipart  archives  by  treating  them as a single virtual
+archive, with the I/O code taking care of disk swapping  requirements  and  so
+on.   The main archiver code sees all archives as a single contiguous block of
+data, whether they are spread over several disks or not  (it  is  for  example
+possible  to  create  a  multipart  archive without even using HPACK simply by
+splitting up an existing archive into segments and adding the  archive  ID  to
+the  start  and  the ID and multipart information to the end of each segment).
+The end of each internal segment is as follows:
+                    .
+                    .
+                    .
+                 Raw data
+    --------------------------------------
+        WORD: Segment number
+        BYTE: Special info
+        BYTE[4]: Archive ID: 'HPAK'
+    ======================================
+
+The end of the final segment is as follows:
+                    .
+                    .
+                    .
+             Filename  n,  '\0'
+    --------------------------------------
+        WORD: No.directory headers
+        WORD: No.file headers
+        LONG: Length of directory block
+        WORD: Directory block checksum
+    --------------------------------------
+         Authentication information
+                (if present)
+    ======================================
+        LONG: Length of 1st segment
+                    .
+                    .
+                    .
+        LONG: Length of nth segment
+    --------------------------------------
+        WORD: Authentication info length
+        WORD: Total number of segments
+        LONG: Pos.of end of last segment
+        WORD: Segment block checksum
+        BYTE: Special info
+        BYTE[4]: Archive ID: 'HPAK'
+    ======================================
+
+  The  segment list covers the entire archive to the start of the segment list
+itself.  Unlike the rest of the archive, the segment list  and  final  trailer
+are  always  located  on  the  same disk; since no segmentation information is
+present when these are read in they must be on the same physical  medium.   If
+the  segment  list and trailer must be placed on a seperate disk, the high bit
+of the total segment count should be set to indicate  that  the  rest  of  the
+archive  is  on  a  seperate  disk.   The  segment  block  checksum covers all
+information from the start of the segment list to the checksum itself.
+
+  When HPACK detects a full disk it should write as much of the  current  data
+as  can  still  fit on the disk, append the trailer information, and request a
+new disk.  The existing code does this by checking how much data  was  written
+and  comparing it to the amount that was supposed to be written: If the result
+is less, the disk is full.  A simpler approach would be to check how much room
+is available on the disk before writing it, however  this  will  not  work  on
+multitasking  OS's  since  the  disk  space  can  change  between  the call to
+determine the space and the call to write the data.  The code  in  HPACK  uses
+the  data  write  to  lock the disk space available to it, and then backtracks
+over the data if necessary.   This  atomic  write  ensures  there  can  be  no
+problems with multiple processes accessing the same disk volume.
+
+  Reading a multipart archive is performed as a multi-stage process in which a
+bootstrap read is used to read the segments, and then the full archive is read
+as usual:
+
+  Step 0:   Locate end of archive
+            Read in disk number and offset of segment list start
+  Step 1:   Ask for correct disk if not there already
+            Seek to segment list start
+  Step 2:   Read in segmentation information
+            Enable virtual filesystem I/O  once  segmentation  information  is
+            available.
+
+
+HPACK Command Format:
+---------------------
+
+  It  is  recommended that the following commands be used for the CLI versions
+of HPACK.  All CLI versions should be standardised to use this command  format
+(where  the  commands  are applicable) to make it possible to use HPACK on any
+system without  having  to  relearn  the  command  set.   All  system-specific
+switches should be specified using the +option format (eg under DOS  +devcheck
+= use volume  label,  under  most  OS's  +lower  =  force  lowercase  on file/
+directory  names,  under  Unix  +noumask  =  ignore  umask  on  file/directory 
+creation, and so on).  See HPACK.DOC for more information on these commands.
+
+  Command letters are:
+
+  [A] - Add files to an archive.
+  [X] - Extract files from an archive.
+  [V] - Directory of files inside an archive.
+  [P] - View a file within an archive.
+  [T] - Test the integrity of an archive.
+  [D] - Delete files from an archive.
+  [F] - Freshen files to an archive.
+  [R] - Replace files in an archive.
+  [U] - Update files to an archive.
+
+  Option letters are:
+
+  -0 - Store without compression.
+  -a - Store file attributes.
+  -b - Specify a base pathname for files.
+  -c - Encrypt files (public- or private-key encryption).
+  -d - Directory options (Mkdir, Rmdir, Mvdir, path specifiers etc).
+  -e - Add error recovery information.
+  -f - Force file move.
+  -i - Interactive mode - prompt for all files.
+  -k - Overwrite existing archives.
+  -l - Add authentication information.
+  -m - Generate multipart archive
+  -o - Overwrite on extraction options (-oa All, -on None, -os Smart,
+                                        -op Prompt)
+  -r - Recurse through subdirectories.
+  -s - Stealth mode.
+  -t - Touch files on extraction.
+  -u - Unified compression mode.
+  -v - View files options (-vf Files, -vd Directories, -vs Sort files).
+  -w - Treat files as archive comments.
+  -x - Translate options for text files (-x smart, -xr CR, -xl LF, -xc CRLF,
+                                         -xxnn Hex, -xe EBCDIC, -xp Prime,
+                                         -xa ASCII as appropriate)
+  +option - System-specific commands
+
+  If possible the following wildcard chars should be used (these are the  Unix
+chars which seem to be the most common ones):
+
+  *       - Matches multiple characters
+  ?       - Matches any one character
+  [...]   - Matches any of the enclosed range of characters '...'.
+  [^...]  - As above, but matches anything *not* in the range.
+  \       - Literal char escape (this becomes '#' in the Atari ST, MSDOS, and
+              version since these systems use '\' as the directory seperator).
+
+
+HPACK Program Structure:
+------------------------
+
+  The  HPACK  archiver has a number of layers which interface between the user
+and the host OS.  This archiver  structure  is  shown  below,  with  the  user
+interface  at  the  top  and the filesystem interface at the bottom.  The core
+archiver routines, which should need few changes, are in the centre.  Note the
+multiple levels of filesystem I/O handling present towards the  bottom  -  any
+necessary  extra  functionality for fileysystem I/O can be transparently added
+at this level.
+
+                        Host OS screen I/O
+      -----------------------------------------------------
+                               /  \                           /  \
+                               |  |                           |  | = data
+                               \  /                           \  /   flow
+      +---------------------------------------------------+
+      |           GUI.C / CLI.C archiver frontend         |    ^
+      | FRONTEND.C,SCRIPT.C,DISPLAY.C,SQL.C user interface|    | = control
+      +---------------------------------------------------+    v    flow
+            ^              ^                   ^
+            |              |                   |
+            v              v                   v
+      +------------+ +-----------+ +----------------------+ +------------+
+      |  ARCDIR.C  | |  TAGS.C   | |       ARCHIVE.C      | |  ERROR.C   |
+      | ARCDIRIO.C | |           | |  compression manager | |   error    |
+      |            | |   extra   | +----------------------+ |  handling  |
+      |   archive  | |   data/   |             |            +------------+
+      |  directory | |information| +----------------------+ +------------+
+      |   manager  | |  manager  | | Plug-in copr.modules | | LANGUAGE.C |
+      +------------+ +-----------+ +----------------------+ |  language- |
+           /  \           /  \               /  \           | independant|
+           |  |           |  |               |  |           | text system|
+           \  /           \  /               \  /           +------------+
+      +---------------------------------------------------+
+      |     CRYPT.C encryption/authentication handling    |
+      +---------------------------------------------------+
+                               /  \
+                               |  |
+                               \  /
+      +---------------------------------------------------+
+      |  FASTIO.C, FILESYS.C, STREAM.C virtual file I/O   |
+      +---------------------------------------------------+
+                               /  \
+                               |  |
+                               \  /
+      -----------------------------------------------------
+                        Host OS file I/O
+
+
+HPACK and Portability:
+----------------------
+
+  HPACK has been written to be as portable as possible - the  main  difference
+between  the  CLI and GUI versions are the use of either cli.c or gui.c at the
+highest level of the user-interface system in the above  diagram.   All  other
+code  is  common  to both CLI and GUI versions for all operating systems.  The
+baseline version of HPACK is the original CLI version (which has  been  around
+for about two years longer than any other version).
+
+  The  portability  problems, at least to another CLI-based OS, are apparently
+not severe: The Xenix port of version 0.71 of HPACK (by Stuart the  Hut)  took
+only  a few  days  to accomplish.  The original Macintosh port of version 0.77
+was done in a single day.
+
+Level 1 HPACK has been successfully compiled using the following compilers:
+
+    - AIX xlc
+    - DICE
+    - Generic Unix cc (many variants)
+    - Irix cc
+    - Microsoft C
+    - MiNT gcc
+    - Norcroft Arm C
+    - Orca/C
+    - Pure C
+    - SAS/Lattice C
+    - SunOs acc
+    - Think C
+    - TopSpeed C
+    - Turbo C
+    - Unix gcc
+    - VAX vcc
+    - Watcom C (the only C compiler named after a toilet)
+    - Zortech C
+
+
+Getting Started:
+----------------
+
+         "Any given HPACK port, when running correctly, is obsolete"
+
+  If  your  source  came  in  a zipfile, unzip it with the -d option to create
+subdirectories as appropriate.  If it came as a tar.Z the files  will  already
+be in the correct directories.
+
+Edit  DEFS.H for your system, and edit the supplied makefile for whatever your
+setup is. If your system supports system-level I/O most of  the  files  should
+compile  without too many errors, especially if the system is at least vaguely
+Unix-compatible.  The nonstandard functions are aliased to  calls  to  hputs()
+which  print  a  warning  message that they should be implemented later. For a
+CLI-based version all that is left is to implement the  nonstandard  functions
+and tune things like the handling of paths and filenames for each system. Most
+of this is contained in FILESYS.C and <os_name>.C
+
+One  point  to note is that the MD5Transform() routine in MD5.C seems to break
+some optimizing compilers, so the version which has been broken up  into  four
+parts may have to be used to allow it to compile.
+
+
+HPACKIO and HPACKLIB:
+---------------------
+
+  All  I/O  functions  are  handled  by  the  three  libraries,  HPACKIO  (for
+filesystem  I/O), HPACKLIB (for console I/O), and SYSTEM (for miscellaneous OS
+routines).   These  libraries  contain  code  to  interface  HPACK  with   the
+underlying  OS  of the host system at the lowest level (HPACKIO corresponds to
+the system-level I/O functions, HPACKLIB corresponds to the  stdio  functions,
+and  SYSTEM  contains various nonstandard routines).  The library routines are
+organised as follows:
+
+HPACKIO Library:
+
+  hcreat();       - Create a given file
+  hopen();        - Open a given file
+  hclose();       - Close a given file
+  hread();        - Read data from a file
+  hwrite();       - Write data to a file
+  hlseek();       - Move the file position indicator
+  htell();        - Return current file position indicator
+  htruncate();    - Truncate a file at the current file position
+  hunlink();      - Remove a file
+  hmkdir();       - Create a directory
+  hrename();      - Rename a file
+  hchmod();       - Set the file's attributes
+
+HPACKLIB Library:
+
+  hputchar();     - Output a single char
+  hputchars();    - As hputchar() but with stealth mode checking
+  hputs();        - Output a string, adding CRLF at end with steath mode chk.
+  hprintf();      - Output a formatted string
+  hprintfs();     - As hprintf() but with stealth mode checking
+  hgetch();       - Get a single char, no echo
+  hmalloc();      - Allocate a block of memory
+  hfree();        - Free a block of memory
+
+SYSTEM Library:
+
+  setFileTime();  - Set the file's timestamp (non-standard)
+  setDirTime();   - Set the directory's timestamp (non-standard)
+  getCountry();   - Get country information for printing dates (non-standard)
+  getScreenSize();- Get the screen size for user I/O (non-standard)
+  isSameFile();   - Determine whether two pathnames refer to same file (nonstd)
+  findFirst();    - Return first matching entry in directory (non-standard)
+  findNext();     - Return following matching entries in directory (non-std)
+  findEnd();      - End of findFirst/Next() routines (non-standard)
+  copyExtraInfo();- Copy any extra information from one file to anoter(non-std)
+
+By  default  HPACKIO.H  and  HPACKLIB.H define these functions as the standard
+system-level I/O functions.  However some  of  the  functions  (in  particular
+those  in  SYSTEM.H)  are nonstandard and will need to be supplied by the user
+(an implementation for Unix is contained in the file UNIX.C, an implementation
+for OS/2 is contained in the file OS2.C).  The I/O functions often make use of
+file descriptors (given here as FD) to refer to files, and are as follows:
+
+int hcreat( const char *fileName, int mode );
+    Create file 'fileName' with access mode 'mode'.
+int hopen( const char *fileName, int mode );
+    Open file 'fileName' with access mode 'mode'.
+int hclose( const FD theFile );
+    Close file associated with 'theFile'.
+int hread( const FD theFile, const BYTE *buffer, const int count );
+    Reads  'count'  bytes of data from the file associated with 'theFile' into
+    buffer 'buffer'.
+int hwrite( const FD theFile, const BYTE *buffer, const int count );
+    Writes  'count'  bytes  of data to the file associated with 'theFile' from
+    buffer 'buffer'.
+int hlseek( const FD theFile, const long offset, const int origin );
+    Moves the file position indicator for the file associated  with  'theFile'
+    to offset 'offset' from starting position 'origin'.
+long htell( const FD theFile );
+    Returns current file position indicator in file 'theFile'.
+int htruncate( const FD theFile );
+    Truncates the file associated with 'theFile' at the current file position.
+int hunlink( const char *fileName );
+    Removes file 'fileName'.
+int hmkdir( const char *dirName );
+    Creates directory 'dirName'.
+int hrename( const char *oldName, const char *newName );
+    Renames file 'oldName' to file 'newName'.
+int hchmod( const char *fileName, const int mode );
+    Set the file 'fileName's attributes to 'mode'.
+
+The HPACKLIB functions are as follows:
+
+int hputchar( const int ch );
+    Writes 'ch' to STDOUT.
+int hputchars( const char ch );
+    Writes 'ch' to STDOUT with stealth-mode checking.
+int hputs( const char *str );
+    Outputs string 'str' to STDOUT, adding CRLF at end with steath mode check.
+int hprintf( const char *format, ... );
+    Output a formatted string with format specified by 'format' to STDOUT.
+int hprintfs( const char *format, ... );
+    As hprintf() but with stealth mode checking.
+int hgetch( void );
+    Get a single character, no echo.  This function is not  entirely  portable
+    but  is  used  in  place  of  the  standard getchar() since getchar() uses
+    buffered I/O, making it possible for users to enter an arbitrary number of
+    characters in response to a question which needs a yes/no answer.
+void hflush( FILE *stream );
+    Flush screen output buffers (required by Unix, and little else).
+void *hmalloc( const int size );
+    Allocates a block of memory of size 'size'.
+int hfree( void *memBlock );
+    Frees a block of memory pointed to by 'memBlock'.
+
+The SYSTEM functions are as follows:
+
+int setFileTime( const FD theFile, const long time );
+    Set the file 'theFile's timestamp to 'time' (non-standard).
+int setDirTime( const FD theDir, const long time );
+    Set the directory 'theDir's timestamp to 'time' (non-standard)
+int getCountry( void );
+    Get  country  information  for  printing  dates (0 = US, 1 = European, 2 =
+    Japanese format) (non-standard).
+void getScreenSize( void );
+    Get  the  screen  dimensions  and  place  them  in  the  global  variables
+    screenHeight and screenWidth (non-standard).
+BOOLEAN isSameFile( const char *pathName1, const char *pathName2 );
+    Determine whether the two pathnames refer to the same file.  MSDOS  can do
+    this by qualifying the names using an undocumented interrupt and comparing
+    them;  Unix  can  check the device numbers and inodes.  This takes care of
+   things like links, aliases, and so on (non-standard).
+BOOLEAN findFirst( const char *filePath, const ATTR matchAttr, \
+                   const FILEHDR *fileInfo );
+    Returns first matching directory entry on 'filePath' (for example  "a/b/c"
+    would  return  "c"  in  directory  "a/b"  (if it existed)) with attributes
+    matching 'matchAttr' and places info in 'fileInfo'.  Returns TRUE if  file
+    found, FALSE otherwise (non-standard).
+BOOLEAN findNext( const FILEHDR *fileInfo );
+    Returns next matching directory entry and places info in 'fileInfo'  (non-
+    standard).
+void findEnd( const FILEHDR *fileInfo );
+    Cleanup  function for findFirst()/findNext() calls, to be called after the
+    last call to findNext() for a particular directory (non-standard).
+void copyExtraInfo( const FD srcFD, const FD destFD );
+    Copy any extra information (icons, extended attributes, etc) which are not
+    part of the normal file data from one file to another (non-standard).
+
+
+HPACK Source Files:
+-------------------
+
+The HPACK source files are as follows:
+
+  arcdir.h    - Interface and data structures for ARCDIR.C
+  choice.h    - The commands available for HPACK
+  error.h     - Interface for the error() routine
+  errorlvl.h  - Error level return codes
+  filehdr.h   - The file header structure
+  filesys.h   - interface for the filesystem handling routines
+  flags.h     - The switches available for HPACK
+  frontend.h  - Interface for FRONTEND.C
+  script.h    - Command-line and script filename interface header
+  sql.h       - SQL interface header
+  system.h    - System-specific information for OS interface routines
+  tags.h      - The master tags file for all versions of HPACK
+  timeinfo.h  - Time format header and conversion routines
+  wildcard.h  - Interface for the wildcard handling routines
+
+  arcdir.c    - Archive directory management routines
+  arcdirio.c  - Archive directory file I/O routines
+  archive.c   - The routines to store data in/retrieve data from an archive
+  frontend.c  - The archiver frontend, which contains most of archiver glue
+  viewfile.c  - The routine to display an archive directory
+
+  cli.c       - Generic CLI version frontend routines
+  gui.c       - Generic GUI version frontend routines
+
+  error.c     - The error() routine
+  filesys.c   - The filesystem handling routines
+  script.c    - The command-line and script filename handling routines
+  sql.c       - SQL query management routines
+  tags.c      - Tags handling code
+  wildcard.c  - Wildcard handling routines
+
+  asn1/asn1.h     - ASN.1 basic types header file
+  asn1/asn1cplx.h - ASN.1 complex types header file
+  asn1/ber.h      - ASN.1 Basic Encoding Rules information
+  asn1/memmgr.h   - Dynamic memory manager interface header
+  asn1/pemcode.h  - PEM en/decoding interface header
+  asn1/asn1.c     - ASN.1 basic types handling routines
+  asn1/asn1cplx.c - ASN.1 complex types handling routines
+  asn1/memmgr.c   - Dynamic memory manager
+  asn1/pemcode.c  - PEM en/decoding routines
+  asn1/pemparse.c - PEM encoded data parsing routines
+
+  crc/crc16.h     - The CRC16 interface
+  crc/crc16.c     - Block CRC16 routines
+
+  crypt/crypt.h   - The encryption system header file
+  crypt/crypt.c   - The encryption management code
+  crypt/keymgmt.h - Key management routines interface header
+  crypt/keymgmt.c - Key management routines
+  crypt/md5.h     - MD5 message digest header file
+  crypt/md5.c     - MD5 message digest routines
+  crypt/mdc.h     - Conventional-key encryption header file
+  crypt/mdc.c     - Conventional-key encryption routines
+  crypt/packet.h  - Encryption packet definitions
+  crypt/rsa.h     - The RSA library interface
+  crypt/rsa.c     - The RSA encryption library
+  crypt/shs.h     - NIST Secure Hash Standard interface header
+  crypt/shs.c     - NIST Secure Hash Standard routines
+
+  ecc/ecc.h       - ECC interface
+  ecc/ecc.c       - ECC routines
+
+  io/display.c    - Formatted text display code
+  io/fastio.h     - Interface for the fast I/O routines
+  io/fastio.c     - The fast I/O system
+  io/stream.h     - I/O stream header file
+  io/stream.c     - I/O stream handling file
+
+  store/store.h   - Interface to the store/unstore routines
+  store/store.c   - File store/unstore routines
+
+  system/amiga.c  - Amiga OS-specific routines
+  system/arc.c    - Archimedes OS-specific routines
+  system/atari.c  - Atari ST OS-specific routines
+  system/mac.c    - Macintosh OS-specific routines
+  system/os2.c    - OS/2 OS-specific routines
+  system/unix.c   - Unix OS-specific routines
+  system/vms.c    - VMS OS-specific routines
+
+  system/makefile       - Makefile for the Unix version
+  system/makefile.os2   - Makefile for the OS/2 version
+  system/makefile.arc   - Makefile for Archimedes version
+  system/makefile.amiga6- Makefile for Amiga version (SAS/C 6.x)
+  system/makefile.amiga - Makefile for Amiga version (SAS/C 5.x)
+  system/linkfile.lnk   - Amiga linker response file
+  system/Hpack.rsrc.hqx - BinHex'd resource file for Macintosh version
+  system/Hpack.pi.hqx   - BinHex'd ThinkC project file for Macintosh version
+  system/hpack.prj      - Pure C project file (68000 systems) for Atari version
+  system/hpack030.prj   - Pure C project file (68030 systems) for Atari version
+  system/SCOptions      - SAS/C 6.3 options file for the Amiga
+  system/SCOptions_D    - SAS/C 6.3 options file for the Amiga
+  system/SCOptions_N    _ Another SAS/C options file
+
+  data/ebcdic.h   - IBM 037 EBCDIC translation table
+
+For the LZW version:
+
+  lzw/lzw.h       - Information for the LZW compression/decompression routines
+  lzw/lzw.c       - LZW buffer allocation routines
+  lzw/lzw_pack.c  - LZW compression routine
+  lzw/lzw_unpk.c  - LZW decompression routine
+
+For the LZA' version:
+
+  lza/lza.c       - The LZA' main compressor/decompressor
+  lza/pack.c      - The arithmetic coder pack() routine
+  lza/unpack.c    - The arithmetic coder unpack() routine
+  lza/model.h
+  lza/model.c     - The model for literals
+  lza/model3.h
+  lza/model3.c    - The model for high positions
+  lza/model4.h
+  lza/model4.c    - The model for low positions
+
+Multilingual support files:
+
+  language/hpaktext.def - Text definitions file
+
+  language/hpaktext.h   - Interface for HPACK i18n routines
+  language/hpaktext.c   - HPACK i18n routines
+
+Supplementary files:
+
+  hpack.cfg         - Sample configuration file for HPACK
+
+  docs/readme.1st   - README file for HPACK
+  docs/hpack.1      - HPACK manpage ([nt]roff source for HPACK.DOC)
+  docs/hpack.doc    - The HPACK documentation
+  docs/hpack.ps     - The HPACK documentation in PostScript format
+  docs/hpackext.doc - The HPACK extended documentation
+  docs/hpackstd.txt - The HPACK standards document
+  docs/hpaktest.txt - The HPACK torture test
+  docs/hpakidea.txt - New ideas for HPACK
+
+  data/stdarg.h     - <stdarg.h> for those systems which don't have it
+  data/stdlib.h     - <stdlib.h> for those systems which don't have it
+
+  data/winhpack.h   - Windoze include file for HPACK
+  data/winhpack.rc  - Windoze resource file for HPACK
+
+  data/testio.c     - Test code for <os_name>.C filesystem I/O routines.  This
+                      module  can  be  linked  with <os_name>.C  to  produce a
+                      standalone  executable  which  will  test  most  of  the
+                      filesystem I/O  calls  without  linking  in the  rest of
+                      HPACK.
+
+  data/*.gif        - Suggested   screen / dialog   layout  for  GUI  versions
+                      (actually  screen  dumps  from  the  Windows  version of
+                      HPACK).  The individual files are:
+  data/addfiles.gif - Add files dialog
+  data/authent.gif  - Authentication options dialog
+  data/encrypt.gif  - Encryption options dialog
+  data/extract.gif  - Extract files dialog
+  data/mainscrn.gif - Main HPACK screen
+  data/miscopt.gif  - Miscellaneous options dialog
+  data/overwrit.gif - Overwrite options dialog
+  data/translat.gif - Translate options dialog
+
+PGP 2.0 Keyring Maintenance:
+
+  keycvt/makefile       - Unix makefile for building the key conversion utility
+  keycvt/makefile.amiga - Amiga makefile for keycvt
+  keycvt/SCOptions      - SAS/C options file for the Amiga
+  keycvt/keycvt.c       - PGP 2.0 -> HPACK secret key format converter
+  keycvt/idea.c         - Cipher for decrypting PGP 2.0 secret keys
+  keycvt/md5.h
+  keycvt/md5.c          - Message digest code needed by keycvt
+  keycvt/mdc.h
+  keycvt/mdc.c          - Cipher for encrypting HPACK secret keys
+
+
+Coding:
+-------
+
+  The following notes outline some of the coding conventions used in HPACK.
+
+ - System-specific code:
+
+   The system being used should be specified on the command-line (generally in
+   the  makefile)  by a define of the form __<system>__, for example __MSDOS__
+   or __UNIX__.  For some systems extra defines may be necessary, for  example
+   Unix  systems may require the extra defines BSD, SYSV, IRIX, ULTRIX, POSIX,
+   etc.  Any system-specific code should  be  enabled/disabled  through  these
+   defines.  As an example, to build  HPACK  under  Ultrix,  the  command-line
+   options  for  the compiler would include '-D__UNIX__' and '-DULTRIX' (again
+   these are given in the makefile).
+
+ - General assumptions about types:
+
+   The following types are defined in DEFS.H
+
+   typedef <8-bit unsigned value>   BYTE
+   typedef <16-bit unsigned value>  WORD
+   typedef <32-bit unsigned value>  LONG
+   typedef <64-bit unsigned value>  QUAD
+   typedef <128-bit unsigned value> LQUAD
+
+   When  used  in HPACK archives, all data are stored in big-endian format, ie
+   for  a  WORD  the  byte ordering is [MSB:LSB].  The get/put byte/word/long/
+   quad/lquad functions perform automatic endianness conversion. The choice of
+   endianness is largely irrelevant because of this automatic conversion;  the
+   final  decision  was  made  based  on the fact that various Internet and US
+   Government encryption standards require data to be big-endian.
+
+   A BOOLEAN is any value capable of holding a value of TRUE or  FALSE  (1  or
+   0).   The  standard  HPACK  distribution uses unsigned chars simply because
+   these take up the least space.
+
+ - Endianness and packing/non-packing of structs:
+
+   The get/put byte/word/long/quad/lquad routines perform automatic endianness
+   conversion  as  data  is  read/written.   The  field-by-field  reading  and
+   writing of structs avoids any  problems  with  compilers  which  align  all
+   struct fields to word or longword boundaries.
+
+ - Bitfields:
+
+   The ANSI standard  for  bitfields  states  that  they  are  implementation-
+   dependant.   HPACK  implements  bitfields  using  bitmasks  to  avoid  this
+   problem.
+
+ - Coding style:
+
+   Try and keep the coding style identical to that used throught the  rest  of
+   HPACK.  I will probably go through and change any submitted code to conform
+   to this coding style in order to preserve a unified style across all source
+   files.   At  least  one  reason  for  this  is  that  the  automatic format
+   conversion program 'mangle' expects code to be laid out in  a  certain  way
+   and will probably break if it hits an unexpected code layout.
+
+ - Making changes to HPACK code:
+
+   In  general  the  main HPACK code should be modified as little as possible.
+   All changes should be restricted to <os_name>.C  and  SYSTEM.H.   Again,  I
+   will   nitpick   any  submitted  code  and  recommend  moving  things  into
+   <os_name>.C if necessary.  The reason behind this is  that  too  much  code
+   which  runs  over  multiple systems consists of an indecipherable morass of
+   #ifdef'd code blocks for every system it has ever  been  compiled  on.  The
+   purpose of the 'h'-functions, <os_name>.C, and SYSTEM.H, is to keep this to
+   an absolute minimum.
+
+
+Releasing an HPACK Port:
+------------------------
+
+  In  order  to  ensure  complete  consistency  across  all versions of HPACK,
+several points should be observed:
+
+ - The file TAGS.H should *never* be modified.  If  any  changes  are  needed,
+   they  should  be  submitted to me, and I will make the changes if necessary
+   and redistribute the new TAGS.H to all HPACK coders.  This is necessary  to
+   ensure all parts of HPACK archives are understandable by all other versions
+   of HPACK (as far as this is possible).
+
+ - There  is  a  file HPAKTEST.TXT included in this distribution which gives a
+   checklist of features in the basic version of HPACK (this is also known  as
+   "The HPACK Torture Test").  Only ports which *completely* pass the test (as
+   far  as is applicable) should be released as final releases.  Non-complying
+   versions should be labelled  alpha-,  beta-,  or  development  releases  as
+   appropriate  (I  waited over 2 years before releasing the first versions of
+   HPACK to make sure I'd Got It Right the first time).
+
+
+HPACK on non-ANSI Systems:
+--------------------------
+
+  Some systems have strange non-ANSI compilers (which nevertheless claim to be
+ANSI - some of them (eg Nyarlathotep, the ESIX compiler)  are  more  like  the
+missing  link  than  a C compiler).  To convert HPACK for these compilers, the
+program 'mangle' is included  as  DATA/MANGLE.C.   Mangle  can  transform  the
+source  in a variety of bizarre and unusual ways, and takes as input a list of
+options telling it what to do with the  code,  and  a  filename  on  which  to
+perform  the transformations (NB some of the mangling options may not be legal
+in some countries - use at your own risk).  Options include:
+
+  -c - Get rid of '\' line  continuation  characters  (except  in  macros  and
+       strings).
+  -e - Change all occurrences of
+         #elif
+       to
+         #else
+         #if
+           ...
+         #endif
+  -f - Turn function headers into K&R versions, for example
+         int getFileID( const char *fileName, int dirID )
+       becomes
+         int getFileID( fileName, dirID )
+             char *fileName;
+             int dirID;
+  -i - Unindent all  lines  beginning  with  '#'  (some  preprocessors  expect
+       directives to always begin in column 1).
+  -k - Delete 'const' from the code.
+  -n - Turn enumerations into #defines and integer types.
+  -p - Change all occurrences of 'void *' to 'char *'.
+  -r - Delete '#pragma' lines from the code.
+  -s - Concatenate strings split over multiple lines with '\'.
+  -t - Turn function prototypes into nameless ANSI versions, for example
+         int getFileID( const char *fileName, int dirID );
+       becomes
+         int getFileID( const char *, int );
+  -v - Delete all 'void's in the code (return values become 'int', parameters
+       disappear).
+  -w - Turn function prototypes into K&R versions, for example
+         int getFileID( const char *fileName, int dirID );
+       becomes
+         int getFileID();
+
+  Mangle is written in ANSI C so it may be necessary to find another system on
+which to cross-mangle the code before compiling it on the destination  system.
+Note  that  mangle  expects  the  code to be formatted in a certain way (as it
+always is in HPACK).  It doesn't appear to break any code even when subject to
+maximum mangling, but I gave up checking the  code  after  the  300th  warning
+message from a genuine ANSI compiler (these warnings were mainly  due  to  the
+destruction of function prototypes).
+
+  At  least  one  compiler,  if  told  to  #include "a/b", will try to include
+"a/a/b".  The compiler owner tells me all SYSV compilers  do  this,  in  which
+case I extend my condolences.
+
+  If  your  system  doesn't  have  a <stdlib.h>, there is one in the directory
+'data' which can be moved into the main HPACK directory.
+
+  If your system doesn't have a <stdarg.h>, there is also one  in  the  'data'
+directory.  When compiling error.c, define NO_STDARG to include different code
+which  doesn't  assume  ANSI  va_arg functions.  This code assumes all data is
+passed on the stack, and may have to be altered for RISC machines which try to
+pass as much as possible in registers.
+
+
+Who's Doing What:
+-----------------
+
+  The following is a list of people currently claiming to be working on  HPACK
+and their email contact addresses and phone numbers:
+
+  HPACK/DOS     Peter Gutmann   - pgut1@cs.aukuni.ac.nz (preferred)
+                                  peter@nacjack.gen.nz or
+                                  peterg@kcbbs.gen.nz
+                                  Ph.(09) 426-5097
+  HPACK/Windoze Lynn Prentice   - lprent@kcbbs.gen.nz
+  HPACK/Unix    Stuart Woolford - stuartw@ccu1.aukuni.ac.nz
+                                  Ph.(09) 426-3464
+  HPACK/OS2     John Burnell    - johnb@maths.grace.cri.nz
+  HPACK/IIGS    Corey Murtagh   - Corey_Murtagh@kcbbs.gen.nz
+                                  Ph.(09) 277-5800
+  HPACK/Mac     Peter Gutmann   - pgut1@cs.aukuni.ac.nz (preferred)
+                                  peter@nacjack.gen.nz or
+                                  peterg@kcbbs.gen.nz
+                                  Ph.(09) 426-5097
+
+
+Bonus Info:  HPACK Character Sheet:
+-----------------------------------
+
+HPACK
+(Archiver Supremus Maximus)
+
+FREQUENCY: 8 (Amiga, Archimedes, Atari ST, Macintosh, MSDOS, Windoze, OS/2,
+              Unix)
+NO. APPEARING: Not a lot
+ARMOUR CLASS: 8 (2 on an OS with protection)
+MOVE: Bloody slow
+HIT DICE: Constantly
+% IN LAIR: 100
+TREASURE TYPE: Easter eggs (many)
+NO. OF ATTACKS: Unlimited
+DAMAGE/ATTACK: May affect sanity of users.  Has been known to destroy
+               hardware - see "The HPACK Curse" in README.1ST.
+SPECIAL ATTACKS: Running HPACK may be classed as a denial of service-type
+                 attack by some systems administrators.
+SPECIAL DEFENSES: Mutates constantly to confuse foes
+MAGIC RESISTANCE: Immune to interrupts of all kinds (there are rumours of
+                  variants of HPACK which will even survive system resets).
+INTELLIGENCE: Just enough to be considered alive.
+ALIGNMENT: Chaotic evil
+SIZE: S (but growing)
+PSIONICS:  Psionics?  How do you spell that?

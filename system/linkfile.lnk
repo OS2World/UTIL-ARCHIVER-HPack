@@ -1,0 +1,39 @@
+FROM lib:c.o+
+cli.o+
+arcdir.o+
+arcdirio.o+
+archive.o+
+display.o+
+error.o+
+fastio.o+
+stream.o+
+filesys.o+
+frontend.o+
+language.o+
+script.o+
+sql.o+
+tags.o+
+viewfile.o+
+wildcard.o+
+asn1.o+
+memmgr.o+
+pemcode.o+
+pemparse.o+
+crc16.o+
+crypt.o+
+keymgmt.o+
+md5.o+
+mdc.o+
+rsa.o+
+shs.o+
+amiga.o+
+store.o+
+lza.o+
+model.o+
+model2.o+
+model3.o+
+model4.o+
+pack.o+
+unpack.o
+TO hpack
+LIB lib:lc.lib lib:amiga.lib

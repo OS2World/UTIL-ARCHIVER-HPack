@@ -1,0 +1,410 @@
+#****************************************************************************
+#*																			*
+#*		Makefile for the Unix version of the HPACK archiver (US version)	*
+#*																			*
+#****************************************************************************
+
+# AIX for the RS6000: Use cc.  Differs vaguely from AIX370/386
+#		AIX - Peter Gutmann, pgut1@cs.aukuni.ac.nz
+# AIX386: Use cc
+# AIX370: Use cc
+#		AIX386, AIX370 - Peter, stud11@cc4.kuleuven.ac.be
+# Amdahl UTS 4: Use cc
+#		Amdahl UTS 4.0 - Andy McFadden, fadden@uts.amdahl.com
+# BSD 386: Use cc
+#		BSD 386 0.1 - Peter Gutmann, pgut1@cs.aukuni.ac.nz
+# Convex: Use cc.  Note: cc 4.0 is known to have bugs
+#		Convex OS 9.0, cc 4.0 - Rafal Maszkowski, rzm@oso.chalmers.se
+# HPUX: Use cc if you have the ANSI C compiler, otherwise use gcc
+#       HPUX 8.07 9000/730 - Russell Street, r.street@auckland.ac.nz
+# Irix: Use cc with the -acpp flag for maximum ANSI-ness
+#		Irix 3.3.2 - Stuart Woolford, stuartw@ccu1.aukuni.ac.nz
+# ISC Unix: Use gcc
+#		ISC Unix SVR3.2 v2.2.1 - David Nugent, david@csource.oz.au
+# Linux: Use gcc
+#		Linux 0.98 - Jacques Grove, 9230971@sunvax.sun.ac.za
+# MiNT: Use gcc
+#		MiNT 0.98 - Stephan Neuhaus, neuhaus@informatik.uni-kl.de
+# NeXT: Use cc
+#		NeXT 3.0 - Mark Adler, me@quest.jpl.nasa.gov
+# OSF 1: Use gcc
+#		OSF 1 1.0 - Peter Gutmann, pgut1@cs.aukuni.ac.nz
+# QNX 4.x: Use cc -ml, no -lcurses, ld -N32768 -ml
+#		QNX 4.0 - Stuart Woolford, stuartw@ccu1.aukuni.ac.nz
+# SunOs: Use gcc.  Don't use the Sun acc which breaks the decompressor
+#		SunOs 4.1 - Peter Gutmann, pgut1@cs.aukuni.ac.nz
+# SVR4: Use cc
+#		SVR4 - Jean-loup Gailly, jloup@chorus.fr
+# Ultrix: Use vcc or gcc. Use rm on cc
+#		Ultrix 4.1 - Peter Gutmann, pgut1@cs.aukuni.ac.nz
+#		Ultrix 3.1 - John Whittington, whitting@scl.cwru.edu
+# Esix:  Run away!  Run away!
+
+PROJ	= hpack
+
+CFLAGS	= -c -D__UNIX__ -O -I. $(CMDC)	# Flags for compiler
+
+LFLAGS	= -o $(PROJ) -lcurses $(CMDL)	# Flags for linker
+
+OUTPATH	=					# Where object files go (/tmp is a good place)
+OBJ		= .o				# Extension for object files
+EXE		=					# Extension for executables
+
+LD		= $(CC)				# Linker (just use the C compiler)
+LS		= ls -l				# Directory command
+ECHO	= echo				# Echo to screen command
+MAKE	= make				# The make command
+MV		= mv				# Rename command
+
+#****************************************************************************
+#*																			*
+#*			If no args are given, print a usage message and exit			*
+#*																			*
+#****************************************************************************
+
+default:
+		@$(ECHO)
+		@$(ECHO) "Usage: make <system-type>"
+		@$(ECHO)
+		@$(ECHO) "To create HPACK, you have to enter the Unix system type you want to build it"
+		@$(ECHO) "for.  Possible options are: aix (RS6000), aix370, aix386, bsd386, convex,"
+		@$(ECHO) "irix, hpux, hpux-gcc, isc, linux, mint, next, osf1, qnx, sun, svr4, ultrix,"
+		@$(ECHO) "ultrix_old (Ultrix 3.x or earlier), and uts4.  If none of the above fit,"
+		@$(ECHO) "try 'make generic', and send a copy of any changes necessary to the author,"
+		@$(ECHO) "pgut1@cs.aukuni.ac.nz"
+		@$(ECHO)
+
+love:
+		@$(ECHO) "Nicht wahr?"
+		@$(ECHO)
+
+#****************************************************************************
+#*																			*
+#*								Rules to build HPACK						*
+#*																			*
+#****************************************************************************
+
+$(OUTPATH)language.dat:		language.dat
+							cp language/language.dat $(OUTPATH)language.dat
+
+$(OUTPATH)arcdir$(OBJ):		arcdir.h defs.h error.h filehdr.h flags.h \
+							hpacklib.h sql.h system.h tags.h asn1/asn1.h \
+							io/fastio.h arcdir.c
+							$(CC) $(CFLAGS) arcdir.c
+
+$(OUTPATH)arcdirio$(OBJ):	arcdir.h filehdr.h choice.h defs.h error.h \
+							hpacklib.h flags.h system.h asn1/asn1.h \
+							crc/crc16.h crypt/crypt.h io/fastio.h \
+							io/hpackio.h store/store.h arcdirio.c
+							$(CC) $(CFLAGS) -DARCHIVE_TYPE=3 arcdirio.c
+
+$(OUTPATH)archive$(OBJ):	arcdir.h filehdr.h choice.h defs.h error.h \
+							filesys.h flags.h frontend.h hpacklib.h system.h \
+							tags.h asn1/asn1.h crypt/crypt.h io/fastio.h \
+							io/hpackio.h store/store.h archive.c
+							$(CC) $(CFLAGS) archive.c
+
+$(OUTPATH)cli$(OBJ):		arcdir.h choice.h defs.h error.h filehdr.h \
+							filesys.h flags.h frontend.h hpacklib.h script.h \
+							sql.h system.h wildcard.h asn1/asn1.h \
+							crypt/crypt.h io/fastio.h language/language.h \
+							cli.c
+							$(CC) $(CFLAGS) cli.c
+
+$(OUTPATH)error$(OBJ):		arcdir.h defs.h filehdr.h error.h flags.h \
+							frontend.h hpacklib.h system.h asn1/asn1.h \
+							crypt/crypt.h io/fastio.h io/hpackio.h \
+							store/store.h error.c
+							$(CC) $(CFLAGS) error.c
+
+$(OUTPATH)filesys$(OBJ):	arcdir.h defs.h error.h filehdr.h filesys.h \
+							flags.h frontend.h hpacklib.h system.h tags.h \
+							asn1/asn1.h io/fastio.h io/hpackio.h filesys.c
+							$(CC) $(CFLAGS) filesys.c
+
+$(OUTPATH)frontend$(OBJ):	arcdir.h filehdr.h choice.h defs.h error.h \
+							filesys.h flags.h frontend.h hpacklib.h system.h \
+							tags.h wildcard.h asn1/asn1.h crypt/crypt.h \
+							io/fastio.h io/hpackio.h store/store.h frontend.c
+							$(CC) $(CFLAGS) frontend.c
+
+$(OUTPATH)script$(OBJ):		arcdir.h choice.h defs.h error.h filehdr.h \
+							filesys.h flags.h frontend.h hpacklib.h script.h \
+							sql.h system.h wildcard.h asn1/asn1.h \
+							io/fastio.h io/hpackio.h language/language.h \
+							script.c
+							$(CC) $(CFLAGS) script.c
+
+$(OUTPATH)sql$(OBJ):		arcdir.h choice.h defs.h filehdr.h flags.h \
+							frontend.h hpacklib.h script.h sql.h system.h \
+							asn1/asn1.h io/hpackio.h language/language.h \
+							sql.c
+							$(CC) $(CFLAGS) sql.c
+
+$(OUTPATH)tags$(OBJ):		defs.h error.h hpacklib.h system.h tags.h \
+							io/fastio.h tags.c
+							$(CC) $(CFLAGS) tags.c
+
+$(OUTPATH)unix$(OBJ):		defs.h error.h flags.h frontend.h hpacklib.h \
+							system.h tags.h io/hpackio.h system/unix.c
+							$(CC) $(CFLAGS) system/unix.c
+
+$(OUTPATH)viewfile$(OBJ):	arcdir.h choice.h defs.h error.h filehdr.h \
+							flags.h frontend.h hpacklib.h sql.h system.h \
+							tags.h wildcard.h asn1/asn1.h io/fastio.h \
+							io/hpackio.h language/language.h viewfile.c
+							$(CC) $(CFLAGS) viewfile.c
+
+$(OUTPATH)wildcard$(OBJ):	defs.h system.h wildcard.h wildcard.c
+							$(CC) $(CFLAGS) wildcard.c
+
+$(OUTPATH)asn1$(OBJ):		defs.h error.h hpacklib.h asn1/asn1.h \
+							asn1/ber.h io/fastio.h asn1/asn1.c
+							$(CC) $(CFLAGS) asn1/asn1.c
+
+$(OUTPATH)memmgr$(OBJ):		defs.h hpacklib.h system.h asn1/memmgr.h \
+							asn1/memmgr.c
+							$(CC) $(CFLAGS) asn1/memmgr.c
+
+$(OUTPATH)pemcode$(OBJ):	defs.h error.h frontend.h hpacklib.h script.h \
+							io/fastio.h asn1/pemcode.c
+							$(CC) $(CFLAGS) asn1/pemcode.c
+
+$(OUTPATH)pemparse$(OBJ):	defs.h script.h asn1/pemcode.h asn1/pemparse.c
+							$(CC) $(CFLAGS) asn1/pemparse.c
+
+$(OUTPATH)crc16$(OBJ):		defs.h crc/crc16.c
+							$(CC) $(CFLAGS) crc/crc16.c
+
+$(OUTPATH)crypt$(OBJ):		choice.h defs.h error.h filesys.h flags.h \
+							frontend.h hpacklib.h system.h crc/crc16.h \
+							crypt/crypt.h crypt/keymgmt.h crypt/md5.h \
+							crypt/mdc.h crypt/packet.h crypt/rsadef.h \
+							crypt/shs.h io/fastio.h io/hpackio.h \
+							language/language.h crypt/crypt.c
+							$(CC) $(CFLAGS) -DRSAREF crypt/crypt.c
+
+$(OUTPATH)keymgmt$(OBJ):	defs.h error.h frontend.h hpacklib.h system.h \
+							crc/crc16.h crypt/crypt.h crypt/md5.h \
+							crypt/mdc.h crypt/keymgmt.h crypt/shs.h \
+							io/fastio.h io/hpackio.h language/language.h \
+							crypt/keymgmt.c
+							$(CC) $(CFLAGS) crypt/keymgmt.c
+
+$(OUTPATH)md5$(OBJ):		defs.h crypt/md5.h crypt/mdc.h crypt/md5.c
+							$(CC) $(CFLAGS) crypt/md5.c
+
+$(OUTPATH)mdc$(OBJ):		defs.h error.h hpacklib.h crypt/crypt.h \
+							crypt/md5.h crypt/mdc.h crypt/shs.h crypt/mdc.c
+							$(CC) $(CFLAGS) crypt/mdc.c
+
+$(OUTPATH)shs$(OBJ):		defs.h crypt/mdc.h crypt/shs.h crypt/shs.c
+							$(CC) $(CFLAGS) crypt/shs.c
+
+$(OUTPATH)display$(OBJ):	defs.h frontend.h hpacklib.h io/display.c
+							$(CC) $(CFLAGS) io/display.c
+
+$(OUTPATH)fastio$(OBJ):		arcdir.h defs.h error.h filehdr.h flags.h \
+							frontend.h hpacklib.h system.h crc/crc16.h \
+							asn1/asn1.h crypt/crypt.h data/ebcdic.h \
+							io/fastio.h io/hpackio.h io/fastio.c
+							$(CC) $(CFLAGS) io/fastio.c
+
+$(OUTPATH)stream$(OBJ):		defs.h hpacklib.h crc/crc16.h crypt/crypt.h \
+							io/stream.h io/stream.c
+							$(CC) $(CFLAGS) io/stream.c
+
+$(OUTPATH)language$(OBJ):	defs.h error.h filehdr.h frontend.h hpacklib.h \
+							system.h asn1/asn1.h crypt/crypt.h io/fastio.h \
+							io/hpackio.h io/stream.h language/language.h \
+							language/language.c
+							$(CC) $(CFLAGS) language/language.c
+
+$(OUTPATH)lza$(OBJ):		defs.h choice.h error.h flags.h hpacklib.h system.h \
+							crc/crc16.h crypt/crypt.h io/fastio.h \
+							io/hpackio.h lza/model.h lza/model2.h lza/model3.h \
+							lza/model4.h lza/lza.c
+							$(CC) $(CFLAGS) lza/lza.c
+
+$(OUTPATH)model$(OBJ):		defs.h error.h flags.h hpacklib.h io/hpackio.h \
+							lza/model.h lza/model.c
+							$(CC) $(CFLAGS) lza/model.c
+
+$(OUTPATH)model2$(OBJ):		defs.h lza/model2.h lza/model2.c
+							$(CC) $(CFLAGS) lza/model2.c
+
+$(OUTPATH)model3$(OBJ):		defs.h lza/model3.h lza/model3.c
+							$(CC) $(CFLAGS) lza/model3.c
+
+$(OUTPATH)model4$(OBJ):		defs.h lza/model4.h lza/model4.c
+							$(CC) $(CFLAGS) lza/model4.c
+
+$(OUTPATH)pack$(OBJ):		defs.h io/hpackio.h io/fastio.h lza/pack.c
+							$(CC) $(CFLAGS) lza/pack.c
+
+$(OUTPATH)unpack$(OBJ):		defs.h crc/crc16.h io/hpackio.h io/fastio.h \
+							lza/model.h lza/unpack.c
+							$(CC) $(CFLAGS) lza/unpack.c
+
+$(OUTPATH)digit$(OBJ):		rsaref/digit.h rsaref/global.h rsaref/nn.h \
+							rsaref/rsaref.h rsaref/digit.c
+							$(CC) $(CFLAGS) -DPROTOTYPES=1 -Irsaref rsaref/digit.c
+
+$(OUTPATH)nn$(OBJ):			rsaref/digit.h rsaref/global.h rsaref/nn.h \
+							rsaref/rsaref.h rsaref/nn.c
+							$(CC) $(CFLAGS) -DPROTOTYPES=1 -Irsaref rsaref/nn.c
+
+$(OUTPATH)rsa$(OBJ):		rsaref/global.h rsaref/nn.h rsaref/rsaref.h \
+							rsaref/r_random.h rsaref/rsa.c
+							$(CC) $(CFLAGS) -DPROTOTYPES=1 -Irsaref rsaref/rsa.c
+
+$(OUTPATH)store$(OBJ):		defs.h error.h hpacklib.h system.h crc/crc16.h \
+							crypt/crypt.h io/fastio.h io/hpackio.h \
+							store/store.h store/store.c
+							$(CC) $(CFLAGS) store/store.c
+
+$(PROJ)$(EXE):	$(OUTPATH)arcdir$(OBJ) $(OUTPATH)arcdirio$(OBJ) \
+				$(OUTPATH)archive$(OBJ) $(OUTPATH)cli$(OBJ) \
+				$(OUTPATH)display$(OBJ) $(OUTPATH)error$(OBJ) \
+				$(OUTPATH)fastio$(OBJ) $(OUTPATH)stream$(OBJ) \
+				$(OUTPATH)filesys$(OBJ) $(OUTPATH)frontend$(OBJ) \
+				$(OUTPATH)language$(OBJ) $(OUTPATH)script$(OBJ) \
+				$(OUTPATH)sql$(OBJ) $(OUTPATH)tags$(OBJ) \
+				$(OUTPATH)viewfile$(OBJ) $(OUTPATH)wildcard$(OBJ) \
+				$(OUTPATH)asn1$(OBJ) $(OUTPATH)memmgr$(OBJ) \
+				$(OUTPATH)pemcode$(OBJ) $(OUTPATH)pemparse$(OBJ) \
+				$(OUTPATH)crc16$(OBJ) $(OUTPATH)crypt$(OBJ) \
+				$(OUTPATH)keymgmt$(OBJ) $(OUTPATH)md5$(OBJ) \
+				$(OUTPATH)mdc$(OBJ) $(OUTPATH)shs$(OBJ) \
+				$(OUTPATH)unix$(OBJ) $(OUTPATH)lza$(OBJ) \
+				$(OUTPATH)model$(OBJ) $(OUTPATH)model2$(OBJ) \
+				$(OUTPATH)model3$(OBJ) $(OUTPATH)model4$(OBJ) \
+				$(OUTPATH)pack$(OBJ) $(OUTPATH)unpack$(OBJ) \
+				$(OUTPATH)store$(OBJ) $(OUTPATH)digit$(OBJ) \
+				$(OUTPATH)nn$(OBJ) $(OUTPATH)rsa$(OBJ)
+		@$(LD) $(LFLAGS) $(OUTPATH)arcdir$(OBJ) $(OUTPATH)arcdirio$(OBJ) \
+		$(OUTPATH)archive$(OBJ) $(OUTPATH)cli$(OBJ) $(OUTPATH)display$(OBJ) \
+		$(OUTPATH)error$(OBJ) $(OUTPATH)fastio$(OBJ) $(OUTPATH)stream$(OBJ) \
+		$(OUTPATH)filesys$(OBJ) $(OUTPATH)frontend$(OBJ) \
+		$(OUTPATH)language$(OBJ) $(OUTPATH)script$(OBJ) $(OUTPATH)sql$(OBJ) \
+		$(OUTPATH)tags$(OBJ) $(OUTPATH)viewfile$(OBJ) \
+		$(OUTPATH)wildcard$(OBJ) $(OUTPATH)asn1$(OBJ) $(OUTPATH)memmgr$(OBJ) \
+		$(OUTPATH)pemcode$(OBJ) $(OUTPATH)pemparse$(OBJ) \
+		$(OUTPATH)crc16$(OBJ) $(OUTPATH)crypt$(OBJ) $(OUTPATH)keymgmt$(OBJ) \
+		$(OUTPATH)md5$(OBJ) $(OUTPATH)mdc$(OBJ) $(OUTPATH)shs$(OBJ) \
+		$(OUTPATH)unix$(OBJ) $(OUTPATH)store$(OBJ) $(OUTPATH)lza$(OBJ) \
+		$(OUTPATH)model$(OBJ) $(OUTPATH)model2$(OBJ) $(OUTPATH)model3$(OBJ) \
+		$(OUTPATH)model4$(OBJ) $(OUTPATH)pack$(OBJ) $(OUTPATH)unpack$(OBJ) \
+		$(OUTPATH)digit$(OBJ) $(OUTPATH)nn$(OBJ) $(OUTPATH)rsa$(OBJ)
+
+#****************************************************************************
+#*																			*
+#*						Defines for each variation of Unix					*
+#*																			*
+#****************************************************************************
+
+# AIX for the RS6000: Use cc.  Differs from AIX370/386 in endianness
+
+aix:
+		@$(MAKE) hpack CMDC="-DAIX" CC="cc"
+
+# AIX370, AIX386: Use cc
+
+aix370:
+		@$(MAKE) hpack CMDC="-DAIX370" CC="cc"
+aix386:
+		@$(MAKE) hpack CMDC="-DAIX386" CC="cc"
+
+# AUX: The only Unix so bloated it has /etc.etc.etc
+
+# BSD 386: Use cc
+
+bsd386:
+		@$(MAKE) hpack CMDC="-DBSD386" CC="cc"
+
+# Convex: Use cc (cc has some bugs)
+
+convex:
+		@$(MAKE) hpack CMDC="-DCONVEX" CC="cc"
+
+# Generic: Generic BSD-ish system running gcc
+
+generic:
+		@$(MAKE) hpack CMDC="-DGENERIC" CC="gcc"
+
+# HPUX: Use cc if you have the ANSI C compiler, otherwise use gcc
+#       Need to use '-Aa -D_HPUX_SOURCE' as compiler options to get
+#       C compiler into ANSI C mode with UNIX symbols.
+
+hpux:
+		@$(MAKE) hpack CMDC="-Aa -D_HPUX_SOURCE -DHPUX +O3" CC="cc"
+
+hpux-gcc:
+		@$(MAKE) hpack CMDC="-DHPUX" CC="gcc"
+
+# Irix: Use cc with the -acpp flag for maximum ANSI-ness
+
+irix:
+		@$(MAKE) hpack CMDC="-acpp -DIRIX" CC="cc"
+
+# ISC Unix: Use gcc
+
+isc:
+		@$(MAKE) hpack CMDC="-DISC" CC="gcc"
+
+# Linux: Use gcc
+
+linux:
+		@$(MAKE) hpack CMDC="-DLINUX" CC="gcc"
+
+# MiNT: Use gcc
+
+mint:
+		@$(MAKE) hpack CMDC="-DMINT" CC="gcc"
+
+# NeXT 3.0: Use cc
+
+next:
+		@$(MAKE) hpack CMDC="-O2 -DNEXT" CMDL="-object -s" CC="cc"
+
+# OSF 1: Use gcc
+
+osf1:
+		@$(MAKE) hpack CMDC="-DOSF1" CC="gcc"
+
+# QNX 4.x: Use cc -ml, no -lcurses, ld -N32768, -ml
+
+qnx:
+		@$(MAKE) hpack CMDC="-ml -DPOSIX" CMDL="-N32768 -ml" CC="cc"
+
+# SunOs: Use gcc.  Don't use the Sun acc which breaks the decompressor
+
+sun:
+		@$(MAKE) hpack CMDC="-DSUNOS -fno-builtin" CC="gcc"
+
+# SVR4: Use cc
+
+svr4:
+		@$(MAKE) hpack CMDC="-DSVR4" CC="cc"
+
+# Ultrix (4.x or newer), Ultrix_old (3.x or older): Use vcc or gcc
+
+ultrix:
+		@$(MAKE) hpack CMDC="-DULTRIX" CC="gcc"
+
+ultrix_old:
+		@$(MAKE) hpack CMDC="-DULTRIX_OLD" CC="gcc"
+
+# Amdahl UTS 4: Use cc
+
+uts4:
+		@$(MAKE) hpack CMDC="-DUTS4 -Xc", CC="cc"
+
+#****************************************************************************
+#*																			*
+#*						Cleanup after make has finished						*
+#*																			*
+#****************************************************************************
+
+clean:
+		rm -f *.o core

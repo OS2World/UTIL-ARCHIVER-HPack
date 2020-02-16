@@ -1,0 +1,3538 @@
+#***************************************************************************
+#*																			*
+#*							HPACK Multi-System Archiver						*
+#*							===========================						*
+#*																			*
+#*						  HPACK Text Message Definition File				*
+#*						   HPAKTEXT.DEF  Updated 20/05/93					*
+#*																			*
+#* This program is protected by copyright and as such any use or copying of	*
+#*  this code for your own purposes directly or indirectly is highly uncool	*
+#*  				and if you do so there will be....trubble.				*
+#* 				And remember: We know where your kids go to school.			*
+#*																			*
+#*		Copyright 1991 - 1993  Peter C.Gutmann.  All rights reserved		*
+#*																			*
+#****************************************************************************
+
+# The configuration file for HPACK's text messages.  This is broken up
+# into seperate sections containing either preprocessor directives or
+# information which is inserted into HPACK as a text message.  Preprocessor
+# directives begin with a '%' sign.  These are:
+#
+# %begintext
+#  <definitions>
+# %endtext
+#
+# The entire definitions file is contained within these directives.  Anything
+# before or after them is ignored (although strictly speaking it should still
+# be prefixed with a comment delimiter).
+#
+# %configuration
+#  <configuration information>
+# %endconfiguration
+#
+# This section contains configuration information for the preprocessor
+# itself, such as character set translation, what code pages to use (if
+# appropriate), translation into 8-bit/multibyte/wide-char encodings, etc.
+#
+# %begin <section-name>
+#  <message information for HPACK>
+# %end <section-name>
+#
+# This section contains text information for HPACK.  All lines not starting
+# with a '#' are treated as text which is inserted into HPACK as a text
+# message.  Text message entries are of the format:
+#
+# # { General message description } "{ English version of message }"
+# { Message itself }
+#
+# The dollar character '$' has special significance in that it is used as
+# an escape code to specify a switch to an alternate character set, the
+# emitting of a non-textual escape code or character, or whatever.  The '$'
+# is followed by an escape value inside parentheses.  Currently used escape
+# codes (with '_' as placeholders) are:
+#
+#	$( )	= Space character
+#	$($)	= '$' character
+#	$(a_)	= Add acute accent to following character
+#	$(d_)	= Add dot to following character
+#	$(e)	= ESC code (0x1B or chr$( 27 ))
+#	$(g_)	= Add accent grave to following character
+#	$(o_)	= Add ogonek to following character
+#	$(s_)	= Generic shift code (see below)
+#	$(u_)	= Add umlaut to following character
+#	$(x__)	= Hexadecimal value (eg for Japanese DBCS)
+#
+# The generic shift code is used for a miscellaneous set of strange
+# characters (a bit like the HPACK development team) which can't be easily
+# classified.  Currently used are:
+#
+#	$(sl)	= Polish slashed l
+#	$(sL)	= Polish slashed L (similar to pound sign)
+#	$(sn)	= Spanish n with tilde
+#	$(sN)	= Spanish N with tilde
+#	$(so)	= Polish 'o z kresk$(oa)'
+#	$(sO)	= Polish 'O z kresk$(oa)' - like an o-acute but defined seperately
+#			  to be able to translate it to "o" instead of "o'" in the ASCII
+#			  charset; it is translated to a real o-acute using the Mazovia
+#			  charset
+#	$(ss)	= German sharp S (looks like a beta)
+#
+# Note that the use of escape codes will cause irregular spacing in text
+# which must be column-aligned.  This should be taken into account when the
+# text lines are entered.
+#
+# When editing this file, change only the { Message itself } section.  Do
+# not change the order or number of messages since these are assumed to
+# remain constant by the preprocessor which builds the actual text message
+# file.
+#
+# The text nationality is indicated by the ISO 639:1988 country code
+# ("Codes for Representation of Names of Languages") prefixed to the string
+# (eg English = "en", German = "de", Spanish = "es", French = "fr",
+# Dutch = "nl", Italian = "it", Polish = "pl", etc), followed by a colon and
+# a space.  These codes are defined in the configuration section (see below).
+#
+# Conditional strings can be inserted into the text with the
+#
+# %if var1 <condition> var2 < condition> var3 ...
+#  <conditional string>
+# %elif var1 <condition> var2 <condition> var3 ...
+#  <conditional string>
+# %else
+#  <conditional string>
+# %endif <endcondition>
+#
+# directives, where <condition> can be '||' or '&&'.  This is useful when
+# different strings are to be included when different compile options are
+# used.  The <endcondition> is added as a comment to the final 'endif', and
+# is an optional parameter for readability.
+#
+# An error type can be specified with the
+#
+# %errcode exitcode
+#
+# directive, giving the exit code for the next set of error messages.  This
+# error code applies until another %errcode directive is encountered or until
+# a %end directive is found.  The error codes themselves are defined within an
+# errcodedef section which looks as follows:
+#
+# %begin errcodedef
+# %errcode <codeName> <codeNo>
+# %end errcodedef
+#
+# where <codeName> is the symbolic name used for that error code and <codeNo>
+# is the code number associated with that name.
+
+# Original text by Peter Gutmann.
+# German translation by Peter Sowa, additions by Martin Braschler.
+# Dutch translation by Peter de Vocht, pdev1@cs.aukuni.ac.nz
+#  (the Peter conspiracy :-)
+# Italian translation by Arrigo Triulzi, a.triulzi@imperial.ac.uk
+#  (the man who broke the Peter conspiracy and started the Pizza Connection ;-)
+# Polish translation by Rafal Maszkowski, rzm@mat.torun.edu.pl
+#  (left underground few years ago and not going to involve in next one)
+# Spanish translation by Eduardo Jacob, 100021.2212@CompuServe.com
+# Swiss translation by Martin Braschler (naemet's nit z'Aernscht, Lueuet).
+# Bavarian translation by Peter Gutmann (not that guy again!).
+
+# I had thought of doing an Elvish version, but Quenya doesn't handle terms
+# like "public-key cryptography" too well :-).
+
+#****************************************************************************
+#*																			*
+#*							Configuration Section							*
+#*																			*
+#****************************************************************************
+
+%begintext
+
+# The configuration section contains information for the preprocessor itself,
+# such as character set translation, what code pages to use (if appropriate),
+# translation into 8-bit/multibyte/wide-char encodings, etc.
+#
+# Language name mappings are given by:
+#
+# %language <language-name> <language-code>
+#
+# where <language-name> is the name of the language in used and <language-code>
+# is the two-letter code which will be used to refer to that language within
+# the body of this file.  Usually this follows the ISO 639:1988 country code.
+#
+# Character set mappings are given by:
+#
+# %charset <name>
+#  <translation rules>
+# %endcharset
+#
+# where <name> is the name of the character set to use.  The translation
+# rules are of the form:
+#
+# %xlat <source macro> <destination char>
+#
+# where the source macro is the macro which generates that particular
+# character, and the destination character may be a single character, a
+# string of characters, or a hexadecimal constant representing the particular
+# value in that character set.
+
+%configuration
+
+# Language names and codes.  Note that, in an act of blatant anglocentrism,
+# English comes first.  Since most people will be using the English version,
+# this makes lookup somewhat faster on average, as we don't have to seek over
+# any intervening languages.
+
+%language english	en
+%language bavarian	bv
+%language dutch		nl
+%language french	fr
+%language german	de
+%language italian	it
+%language polish	pl
+%language spanish	es
+%language swiss		ch
+
+# IBM PC character set translation
+
+%charset ibmpc
+%xlat $(aa)	0xA0
+%xlat $(ac)	c
+%xlat $(ae)	0x82
+%xlat $(ai)	0xA1
+%xlat $(an)	n
+%xlat $(ao)	0xA2
+%xlat $(aS)	S
+%xlat $(as)	s
+%xlat $(au)	0xA3
+%xlat $(az)	z
+%xlat $(dz)	z
+%xlat $(ga)	0x85
+%xlat $(ge)	0x8A
+%xlat $(gi)	0x8D
+%xlat $(go)	0x95
+%xlat $(gu)	0x97
+%xlat $(oA)	A
+%xlat $(oa)	a
+%xlat $(oE)	E
+%xlat $(oe)	e
+%xlat $(sL)	0x9C
+%xlat $(sl)	l
+%xlat $(sN)	0xA5
+%xlat $(sn)	0xA4
+%xlat $(sO)	0xA2
+%xlat $(so)	0xA2
+%xlat $(ss)	0xE1
+%xlat $(uA)	0x8E
+%xlat $(ua)	0x84
+%xlat $(ue)	0x89
+%xlat $(ui)	0x8B
+%xlat $(uO)	0x99
+%xlat $(uo)	0x94
+%xlat $(uU)	0x9A
+%xlat $(uu)	0x81
+%endcharset
+
+# ISO 8859-1:1987 Latin 1 character set translation
+
+%charset iso8859-1
+%xlat $(aA)	0xC1
+%xlat $(aa)	0xE1
+%xlat $(aE)	0xC9
+%xlat $(ae)	0xE9
+%xlat $(aI)	0xCD
+%xlat $(ai)	0xED
+%xlat $(aO)	0xD3
+%xlat $(ao)	0xF3
+%xlat $(aU)	0xDA
+%xlat $(au)	0xFA
+%xlat $(gA)	0xC0
+%xlat $(ga)	0xE0
+%xlat $(gE)	0xC8
+%xlat $(ge)	0xE8
+%xlat $(gI)	0xCC
+%xlat $(gi)	0xEC
+%xlat $(gO)	0xD2
+%xlat $(go)	0xF2
+%xlat $(gU)	0xD9
+%xlat $(gu)	0xF9
+%xlat $(sN)	0xD1
+%xlat $(sn)	0xF1
+%xlat $(ss)	0xDF
+%xlat $(uA)	0xC4
+%xlat $(ua)	0xE4
+%xlat $(uO)	0xD6
+%xlat $(uo)	0xF6
+%xlat $(uU)	0xDC
+%xlat $(uu)	0xFC
+%endcharset
+
+# ISO 8859-2:1987 Latin 2 character set translation
+
+%charset iso8859-2
+%xlat $(aA)	0xC1
+%xlat $(aa)	0xE1
+%xlat $(aC)	0xC6
+%xlat $(ac)	0xE6
+%xlat $(aE)	0xC9
+%xlat $(ae)	0xE9
+%xlat $(aI)	0xCD
+%xlat $(ai)	0xED
+%xlat $(aN) 0xD1
+%xlat $(an)	0xF1
+%xlat $(aS)	0xA6
+%xlat $(as)	0xB6
+%xlat $(aU)	0xDA
+%xlat $(au)	0xFA
+%xlat $(aZ)	0xAC
+%xlat $(az)	0xBC
+%xlat $(dZ)	0xAF
+%xlat $(dz)	0xBF
+%xlat $(oA)	0xA1
+%xlat $(oa)	0xB1
+%xlat $(oE)	0xCA
+%xlat $(oe)	0xEA
+%xlat $(sL)	0xA3
+%xlat $(sl)	0xB3
+%xlat $(sO)	0xD3
+%xlat $(so)	0xF3
+%xlat $(ss)	0xDF
+%xlat $(uA)	0xD4
+%xlat $(ua)	0xE4
+%xlat $(uO)	0xD6
+%xlat $(uo)	0xE6
+%xlat $(uU)	0xDC
+%xlat $(uu)	0xEC
+%endcharset
+
+# ISO 8859-3:1987 Latin 3 character set translation
+
+%charset iso8859-3
+%xlat $(aA)	0xD1
+%xlat $(aa)	0xE1
+%xlat $(aE)	0xC9
+%xlat $(ae)	0xE9
+%xlat $(aI)	0xCD
+%xlat $(ai)	0xED
+%xlat $(aO)	0xD3
+%xlat $(ao)	0xE3
+%xlat $(aU)	0xDA
+%xlat $(au)	0xFA
+%xlat $(dZ)	0xAF
+%xlat $(dz)	0xBF
+%xlat $(gA)	0xC0
+%xlat $(ga)	0xE0
+%xlat $(gE)	0xC8
+%xlat $(ge)	0xE8
+%xlat $(gI)	0xCC
+%xlat $(gi)	0xEC
+%xlat $(gO)	0xD2
+%xlat $(go)	0xE2
+%xlat $(gU)	0xD9
+%xlat $(gu)	0xE9
+%xlat $(sN)	0xD1
+%xlat $(sn)	0xE1
+%xlat $(ss)	0xDF
+%xlat $(uA)	0xC4
+%xlat $(ua)	0xE4
+%xlat $(uO)	0xD6
+%xlat $(uo)	0xE6
+%xlat $(uU)	0xDC
+%xlat $(uu)	0xFC
+%endcharset
+
+# ISO 8859-4:1987 Latin 4 character set translation
+
+%charset iso8859-4
+%xlat $(aA)	0xC1
+%xlat $(aa)	0xE1
+%xlat $(aE)	0xC9
+%xlat $(ae)	0xE9
+%xlat $(aI)	0xCD
+%xlat $(ai)	0xED
+%xlat $(aU)	0xDA
+%xlat $(au)	0xFA
+%xlat $(oA)	0xA1
+%xlat $(oa)	0xB1
+%xlat $(oE)	0xCA
+%xlat $(oe)	0xEA
+%xlat $(ss)	0xDF
+%xlat $(uA)	0xC4
+%xlat $(ua)	0xE4
+%xlat $(uO)	0xD6
+%xlat $(uo)	0xF6
+%xlat $(uU)	0xDC
+%xlat $(uu)	0xFC
+%endcharset
+
+# 7-bit ASCII character set translation as recommended in RFC 1345,
+# "Character Mnemonics and Character Sets".
+
+%charset ascii
+%xlat $(aA)	A'
+%xlat $(aa)	a'
+%xlat $(aC)	C
+%xlat $(ac)	c
+%xlat $(aE)	E'
+%xlat $(ae)	e'
+%xlat $(aI)	I'
+%xlat $(ai)	i'
+%xlat $(aN)	N
+%xlat $(an)	n
+%xlat $(aO)	O
+%xlat $(ao)	o
+%xlat $(aS)	S
+%xlat $(as)	s
+%xlat $(aU)	U'
+%xlat $(au)	u'
+%xlat $(aZ)	Z
+%xlat $(az)	z
+%xlat $(dZ)	Z
+%xlat $(dz)	z
+%xlat $(gA)	A`
+%xlat $(ga)	a`
+%xlat $(gE)	E`
+%xlat $(ge)	e`
+%xlat $(gI)	I`
+%xlat $(gi)	i`
+%xlat $(gO)	O`
+%xlat $(go)	o`
+%xlat $(gU)	U`
+%xlat $(gu)	u`
+%xlat $(oA)	A
+%xlat $(oa)	a
+%xlat $(oE)	E
+%xlat $(oe)	e
+%xlat $(sL)	L
+%xlat $(sl)	l
+%xlat $(sN)	N
+%xlat $(sn)	n
+%xlat $(sO)	O
+%xlat $(so)	o
+%xlat $(ss)	ss
+%xlat $(uA)	Ae
+%xlat $(ua)	ae
+%xlat $(uO)	Oe
+%xlat $(uo)	oe
+%xlat $(uU)	Ue
+%xlat $(uu)	ue
+%endcharset
+
+# Polish Mazovia character set
+
+%charset mazovia
+%xlat $(aC)	0x95
+%xlat $(ac)	0x8D
+%xlat $(aN)	0xA5
+%xlat $(an)	0xA4
+%xlat $(aS)	0x98
+%xlat $(as)	0x9E
+%xlat $(aZ)	0xA0
+%xlat $(az)	0xA6
+%xlat $(dZ)	0xA1
+%xlat $(dz)	0xA7
+%xlat $(oA)	0x8F
+%xlat $(oa)	0x86
+%xlat $(oE)	0x90
+%xlat $(oe)	0x91
+%xlat $(sL)	0x9C
+%xlat $(sl)	0x92
+%xlat $(sO)	0xA3
+%xlat $(so)	0xA2
+%endcharset
+
+# Macintosh character set
+
+%charset macintosh
+%xlat $(aa)	0x87
+%xlat $(aA)	0xE7
+%xlat $(aE)	0x83
+%xlat $(ae)	0x8E
+%xlat $(aI)	0xEA
+%xlat $(ai)	0x92
+%xlat $(aO)	0xEE
+%xlat $(ao)	0x97
+%xlat $(aU)	0xF2
+%xlat $(au)	0x9C
+%xlat $(gA)	0xCB
+%xlat $(ga)	0x88
+%xlat $(gE)	0xE9
+%xlat $(ge)	0x8F
+%xlat $(gI)	0xED
+%xlat $(gi)	0x93
+%xlat $(gO)	0xF1
+%xlat $(go)	0x98
+%xlat $(gU)	0xF4
+%xlat $(gu)	0x9D
+%xlat $(sN)	0x84
+%xlat $(sn)	0x96
+%xlat $(ss)	0xA7
+%xlat $(uA)	0x80
+%xlat $(ua)	0x8A
+%xlat $(uO)	0x85
+%xlat $(uo)	0x9A
+%xlat $(uU)	0x86
+%xlat $(uu)	0x9F
+%endcharset
+
+# IBM Code Page 850 character set
+
+%charset cp850
+%xlat $(aa)	0xA0
+%xlat $(aA)	0xB5
+%xlat $(aE)	0x90
+%xlat $(ae)	0x82
+%xlat $(aI)	0xD6
+%xlat $(ai)	0xA1
+%xlat $(aO)	0xE0
+%xlat $(ao)	0xA2
+%xlat $(aU)	0xE9
+%xlat $(au)	0xA3
+%xlat $(gA)	0xB7
+%xlat $(ga)	0x85
+%xlat $(gE)	0xD4
+%xlat $(ge)	0x8A
+%xlat $(gI)	0xDE
+%xlat $(gi)	0x8D
+%xlat $(gO)	0xE3
+%xlat $(go)	0x95
+%xlat $(gU)	0xEB
+%xlat $(gu)	0x97
+%xlat $(sN)	0xA5
+%xlat $(sn)	0xA4
+%xlat $(ss)	0xE1
+%xlat $(uA)	0x8E
+%xlat $(ua)	0x84
+%xlat $(uO)	0x99
+%xlat $(uo)	0x94
+%xlat $(uU)	0x9A
+%xlat $(uu)	0x81
+%endcharset
+
+# IBM Code Page 869 character set
+
+%charset cp869
+%xlat $(aa)	0xD6
+%xlat $(aA)	0xA4
+%xlat $(aE)	0xAD
+%xlat $(ae)	0xE3
+%xlat $(aI)	0xB8
+%xlat $(ai)	0xE7
+%xlat $(aO)	0xCF
+%xlat $(ao)	0xEC
+%xlat $(aU)	0x91
+%xlat $(au)	0xA0
+%xlat $(gA)	0xA1
+%xlat $(ga)	0xFC
+%xlat $(gE)	0xAC
+%xlat $(ge)	0xE2
+%xlat $(gI)	0xB7
+%xlat $(gi)	0xE6
+%xlat $(go)	0xED
+%xlat $(gU)	0xD5
+%xlat $(gu)	0xFA
+%xlat $(sN)	0xC7
+%xlat $(sn)	0xEB
+%xlat $(ss)	0x9F
+%xlat $(uA)	0xA7
+%xlat $(ua)	0xDD
+%xlat $(uO)	0xD2
+%xlat $(uo)	0xF3
+%xlat $(uU)	0x9B
+%xlat $(uu)	0xA2
+%endcharset
+
+# IBM 037 EBCDIC character set
+
+%charset ebcdic
+%xlat $(aa)	0x45
+%xlat $(aA)	0x65
+%xlat $(aE)	0x71
+%xlat $(ae)	0x51
+%xlat $(aI)	0x75
+%xlat $(ai)	0x55
+%xlat $(aO)	0xEE
+%xlat $(ao)	0xCE
+%xlat $(aU)	0xFE
+%xlat $(au)	0xDE
+%xlat $(gA)	0x64
+%xlat $(ga)	0x44
+%xlat $(gE)	0x74
+%xlat $(ge)	0x54
+%xlat $(gI)	0x78
+%xlat $(gi)	0x58
+%xlat $(gO)	0xED
+%xlat $(go)	0xCD
+%xlat $(gU)	0xFD
+%xlat $(gu)	0xDD
+%xlat $(sN)	0x69
+%xlat $(sn)	0x49
+%xlat $(ss)	0x59
+%xlat $(uA)	0x63
+%xlat $(ua)	0x43
+%xlat $(uO)	0xEC
+%xlat $(uo)	0xCC
+%xlat $(uU)	0xFC
+%xlat $(uu)	0xDC
+%endcharset
+
+# NeXT NeXTSTEP character set
+
+%charset nextstep
+%xlat $(aa)	0xD6
+%xlat $(aA)	0x82
+%xlat $(aE)	0x89
+%xlat $(ae)	0xDD
+%xlat $(aI)	0x8D
+%xlat $(ai)	0xE2
+%xlat $(aO)	0x93
+%xlat $(ao)	0xED
+%xlat $(aU)	0x98
+%xlat $(au)	0xF3
+%xlat $(gA)	0x81
+%xlat $(ga)	0xD5
+%xlat $(gE)	0x88
+%xlat $(ge)	0xDC
+%xlat $(gI)	0x8C
+%xlat $(gi)	0xE0
+%xlat $(gO)	0x92
+%xlat $(go)	0xEC
+%xlat $(gU)	0x97
+%xlat $(gu)	0xF2
+%xlat $(sN)	0x91
+%xlat $(sn)	0xE7
+%xlat $(ss)	0xFB
+%xlat $(uA)	0x85
+%xlat $(ua)	0xD9
+%xlat $(uO)	0x96
+%xlat $(uo)	0xF0
+%xlat $(uU)	0x9A
+%xlat $(uu)	0xF6
+%endcharset
+
+%endconfiguration
+
+#****************************************************************************
+#*																			*
+#*									Errors									*
+#*																			*
+#****************************************************************************
+
+# The possible error codes
+
+%begin errcodedef
+
+%errcode EXIT_OK			0		# No error
+
+%errcode EXIT_INT_ERR		1		# Internal error
+%errcode EXIT_NO_MEM		2		# Out of memory
+%errcode EXIT_NO_DISK		3		# Out of disk space
+%errcode EXIT_NO_ARCH		4		# Can't open archive file
+%errcode EXIT_NO_TEMP		5		# Can't open temporary file
+%errcode EXIT_NO_PATH		6		# Can't find path
+%errcode EXIT_NO_BASE		7		# Can't access base directory
+%errcode EXIT_NO_MKDIR		8		# Can't create directory
+%errcode EXIT_BREAK			9		# User interrupt
+%errcode EXIT_FILE_ERR		10		# Unknown file error
+%errcode EXIT_DIR_CORRUPT	11		# Archive directory corrupted
+
+%errcode EXIT_LONG_PATH		100		# Path too long
+%errcode EXIT_NO_OVERRIDE	101		# Can't override base path
+%errcode EXIT_NEST			102		# Directories nested too deeply
+%errcode EXIT_SCRIPT_ERR	103		# Error(s) in script file
+%errcode EXIT_NOT_ARCH		104		# Not an HPACK archive
+%errcode EXIT_BAD_KEYFILE	105		# Bad keyfile
+%errcode EXIT_NOTHING		106		# Nothing to do
+%errcode EXIT_COMMAND		107		# Unknown command
+%errcode EXIT_OPTION		108		# Unknown option
+
+%errcode EXIT_PASS			200		# Differing or incorrect password(s)
+%errcode EXIT_CHANGE		201		# Bad attempt to change archive (eg attempt
+									# to change a block-encrypted archive)
+%errcode EXIT_NOLONG		202		# Long arg.format not supported
+%errcode EXIT_BADWILD		203		# Bad wildcard format or inappropriate use
+									# of wildcards
+%errcode EXIT_SECURITY		204		# General security/encryption error
+%errcode EXIT_NOCRYPT		205		# Cannot process encrypted archive
+
+%end errcodedef
+
+# All error messages are of the form: "Error: " + message.  For example
+# the first error message, "Internal error", would be printed as:
+# "Error: Internal error".
+
+%begin severeerrors
+
+# Severe errors
+
+# Internal error: "Internal error"
+%errcode EXIT_INT_ERR
+en: Internal error
+de: Interner Fehler
+nl: Interne fout
+it: Errore interno
+pl: B$(sl)$(oa)d wewn$(oe)trzny
+es: Error interno
+ch: !!ch
+bv: Interner F$(ua)lla
+
+# Out of memory error: "Out of memory"
+%errcode EXIT_NO_MEM
+en: Out of memory
+de: Kein Speicher mehr
+fr: Memoire insuffisante
+nl: Geheugen vol
+it: Memoria insufficiente
+pl: Brak pami$(oe)ci
+es: Memoria insuficiente
+ch: !!ch
+bv: Koa Speicher mehr do
+
+# Out of disk space error: "Out of disk space"
+%errcode EXIT_NO_DISK
+en: Out of disk space
+de: Kein Plattenspeicher mehr
+nl: Geen ruimte op de diskette
+it: Spazio su disco insufficiente
+pl: Brak miejsca na dysku
+es: Espacio en disco insuficiente
+ch: !!ch
+bv: Koa Plattenspeicher mehr do
+
+# Cannot open archive file <filename>: "Cannot open archive file %s"
+%errcode EXIT_NO_ARCH
+en: Cannot open archive file %s
+de: Archivdatei %s kann nicht ge$(uo)ffnet werden
+nl: Archief bestand %s can niet geopend worden
+it: Impossibile aprire l' archivio %s
+pl: Nie mog$(oe) otworzyc archiwum %s
+es: No es posible abrir el archivo %s
+ch: !!ch
+bv: d'Archivdatei %s konn ned aufgmacht wern
+
+# Cannot open temporary file: "Cannot open temp file"
+%errcode EXIT_NO_TEMP
+en: Cannot open temp file
+de: Tempor$(ua)rdatei %s kann nicht ge$(uo)ffnet werden
+nl: Tijdelijk bestand %s kan niet geopend worden
+it: Impossibile aprire il file temporaneo
+pl: Nie mog$(oe) otworzy$(ac) pliku tymczasowego
+es: No es posible abrir el archivo temporal
+ch: !!ch
+bv: d'Tempor$(ua)rdatei %s konn ned aufgmacht wern
+
+# Cannot find path corresponding to <pathname>: "Path %s not found"
+%errcode EXIT_NO_PATH
+en: Path %s not found
+de: Suchweg %s nicht gefunden
+nl: Pad %s niet gevonden
+it: Path %s inesistente
+pl: Nie mog$(oe) znale$(az)$(ac) $(as)cie$(dz)ki %s
+es: Camino %s inexistente
+ch: !!ch
+bv: Da Suchweg %s exisdierd ned
+
+# Cannot access base directory.  The base directory is the path outside
+# the archive which is used in place of the current directory.  For example
+# if the current directory is /a/b and the base directory is /c/d, then
+# HPACK will perform all processing as if the current directory were /c/d.
+# This allows processing files to/from /c/d without having to change to
+# that directory explicitly : "Cannot access base directory"
+%errcode EXIT_NO_BASE
+en: Cannot access base directory
+de: Kein Zugriff auf Haupverzeichnis
+nl: Geen toegang tot het basis pad
+it: Impossibile accedere alla directory di base
+pl: Brak dost$(oe)pu do katalogu bazowego
+es: No es posible acceder al directorio base
+ch: !!ch
+bv: Konn aufs Haupverzeichnis ned hi
+
+# Cannot create directory <pathname>: "Cannot create directory %s"
+%errcode EXIT_NO_MKDIR
+en: Cannot create directory %s
+de: Verzeichnis %s kann nicht Erstellt werden
+nl: Pad %s kan niet gemaakt worden
+it: Impossibile creare directory %s
+pl: Nie mog$(oe) utworzyc katalogu %s
+es: No es posible crear el directorio %s
+ch: !!ch
+bv: Konn s'Verzeichnis %s ned Erstein
+
+# Stopped due to user interrupt: "Stopped at user request"
+%errcode EXIT_BREAK
+en: Stopped at user request
+de: Abgebrochen auf Bedienerwunsch
+nl: Gestopt op aanvraag van de gebruiker
+it: Fine su richesta utente
+pl: Zatrzymany przez u$(dz)ytkownika
+es: Interrumpido a petici$(ao)n del usuario
+ch: !!ch
+bv: Hob aufg'heert auf Bedienerwunsch
+
+# File error of type <errorcode> (MSDOS only): "File error type %02d"
+# or nonspecific file error: "File error"
+%errcode EXIT_FILE_ERR
+%if __MSDOS__
+en: File error type %02d
+de: Dateifehler vom typ Nummer %02d
+nl: Bestand fout nummer %02d
+it: Errore file numero %02d
+pl: B$(sl)$(oa)d plikowy nr %02d
+es: Error de fichero n$(au)mero %02d
+ch: !!ch
+bv: Dateifehler fom typ Nummer %02d
+%else
+en: File error
+de: Dateifehler
+nl: Bestand fout
+it: Errore file
+pl: B$(sl)$(oa)d plikowy
+es: Error de fichero
+ch: !!ch
+bv: Dateifehler
+%endif __MSDOS__
+
+# Archive directory corrupted: "Archive directory corrupted"
+%errcode EXIT_DIR_CORRUPT
+en: Archive directory corrupted
+de: Verzeichnis des Archivs defekt
+nl: Archief pad is korrupt
+it: Directory dell' archivio danneggiata
+pl: Katalog archiwum uszkodzony
+es: Directorio de archivo corrupto
+ch: !!ch
+bv: s'Verzeichnis vom Archiv is kaputt
+
+%end severeerrors
+
+%begin standarderrors
+
+# Standard errors
+
+# Various errors with over-long paths: "Path %s too long", "Path %s... too long",
+#	"Path %s%s too long", "Path %s%s... too long", "Path %s/%s too long"
+%errcode EXIT_LONG_PATH
+en: Path %s too long
+en: Path %s... too long
+en: Path %s%s too long
+en: Path %s%s... too long
+en: Path %s/%s too long
+de: Suchweg %s zu lang
+de: Suchweg %s... zu lang
+de: Suchweg %s%s zu lang
+de: Suchweg %s%s... zu lang
+de: Suchweg %s/%s zu lang
+nl: Pad %s is te lang
+nl: Pad %s... is te lang
+nl: Pad %s%s is te lang
+nl: Pad %s%s... is te lang
+nl: Pad %s/%s is te lang
+it: Lunghezza path %s eccessiva
+it: Lunghezza path %s... eccessiva
+it: Lunghezza path %s%s eccessiva
+it: Lunghezza path %s%s... eccessiva
+it: Lunghezza path %s/%s... eccessiva
+pl: $(aS)cie$(dz)ka %s za d$(sl)uga
+pl: $(aS)cie$(dz)ka %s... za d$(sl)uga
+pl: $(aS)cie$(dz)ka %s%s za d$(sl)uga
+pl: $(aS)cie$(dz)ka %s%s... za d$(sl)uga
+pl: $(aS)cie$(dz)ka %s/%s... za d$(sl)uga
+es: Camino %s demasiado largo
+es: Camino %s... demasiado largo
+es: Camino %s%s demasiado largo
+es: Camino %s%s... demasiado largo
+es: Camino %s/%s... demasiado largo
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+bv: Da Suchweg %s is z'lang
+bv: Da Suchweg %s... is z'lang
+bv: Da Suchweg %s%s is z'lang
+bv: Da Suchweg %s%s... is z'lang
+bv: Da Suchweg %s/%s is z'lang
+fr: Chemin %s trop long
+fr: Chemin %s... trop long
+fr: Chemin %s%s trop long
+fr: Chemin %s%s... trop long
+fr: Chemin %s/%s trop long
+
+# Attempt to override base path.  If a base path is given, and another path
+# is given as an argument which would override it (for example base
+# path is /a/b, argument path is /c/d), a conflict occurs:
+#	"Cannot override base path"
+%errcode EXIT_NO_OVERRIDE
+en: Cannot override base path
+de: Unm$(uo)glich, das Hauptverzeichnis so zu $(uu)berreiten
+nl: Basis pad kan niet overschreven worden
+it: Impossibile modificare path di base
+pl: Nie mog$(oe) zmieni$(ac) $(as)cie$(dz)ki bazowej
+es: No es posible modificar el camino de base
+ch: !!ch
+bv: Konn's Hauptverzeichnis ned $(uu)wwarreiten
+
+# Too many levels of directory nesting: "Too many levels of directory nesting"
+%errcode EXIT_NEST
+en: Too many levels of directory nesting
+de: Verzeichnisverschachtelung zu gro$(ss)
+nl: Te veel niveaus in elkaar voor het pad
+it: Troppi livelli di directory nesting
+pl: Za du$(dz)o podpoziom$(so)w katalog$(so)w
+es: Demasiados directorios anidados
+ch: !!ch
+bv: d'Verzeichnisverschachtelung is z'gros
+
+# Number of errors detected in a script file: "%s%d errors detected"
+%errcode EXIT_SCRIPT_ERR
+en: %s%d errors detected in script file
+de: %s%d Fehler in der Skriptdatei
+nl: %s%d fouten gevonden in script bestand
+it: %s%d errori trovati in script file
+pl: %s%d b$(sl)$(oe)d$(so)w w skrypcie
+es: %s%d errores detectados en el fichero de $(ao)rdenes
+ch: !!ch
+bv: %s%d F$(ua)lla in da Skriptdatei
+
+# File is apparently not an HPACK archive: "Not an HPACK archive"
+%errcode EXIT_NOT_ARCH
+en: Not an HPACK archive
+de: Nicht ein HPACK-Archiv
+nl: Niet een HPACK archief
+it: Non $(ge) un' archivio HPACK
+pl: To nie jest archiwum HPACK
+es: No es un archivo HPACK
+ch: !!ch
+bv: Des is koa HPACK-Archiv
+
+# No matching files found on disk or in the archive, no matching archives found:
+#	"No matching files on disk", "No matching files in archive",
+#	"No matching archives found"
+%errcode EXIT_NOTHING
+en: No matching files on disk
+en: No matching files in archive
+en: No matching archives found
+de: Keine passenden Dateien auf der Disk(ette)
+de: Keine passenden Dateien im Archiv
+de: Keine passenden Archiven gefunden
+nl: Geen dezelfde bestanden op de diskette
+nl: Geen dezelfde bestanden in het archief
+nl: Geen dezelfde archieven gevonden
+it: Non ci sono file corrispondenti sul disco
+it: Non ci sono file corrispondenti nell' archivio
+it: Non ci sono archivi corrispondenti
+pl: Brak pasuj$(oa)cych plik$(so)w na dysku
+pl: Brak pasuj$(oa)cych plik$(so)w w archiwum
+pl: Brak pasuj$(oa)cych archiw$(so)w
+es: No hay ficheros correspondientes en el disco
+es: No hay ficheros correspondientes en el archivo
+es: No hay archivos correspondientes
+ch: !!ch
+ch: !!ch
+ch: !!ch
+bv: Koane passenden Dateien auf da Disk(ette)
+bv: Koane passenden Dateien im Archiv
+bv: Koane passenden Archiven g'funden
+
+# Bad public/private key file: "Bad keyfile"
+%errcode EXIT_BAD_KEYFILE
+en: Bad keyfile
+de: Fehlerhafte Schl$(uu)ssel-Datei
+nl: Foutief sleutel bestand
+it: Keyfile invalido
+pl: Z$(sl)y plik-klucz
+es: Fichero de claves inv$(aa)lido
+ch: !!ch
+bv: Kaputte Schlissel-Datei
+
+# Unknown command <command>: "Unknown command '%s'"
+%errcode EXIT_COMMAND
+en: Unknown command '%s'
+de: Unbekannter Befehl '%s'
+nl: Onbekend kommando '%s'
+it: Comando sconosciuto '%s'
+pl: Nieznana komenda '%s'
+es: Comando desconocido '%s'
+ch: !!ch
+bv: Kenn mi mim Kommando '%s' ned aus
+
+# Unknown archiver option <option>.  An unknown sub-option has been given
+# as part of an HPACK option (for example if the option is '-d' for
+# directory options, then following it with a 'x' is invalid, since '-dx'
+# has no meaning : "Unknown directory option '%c'",
+#	"Unknown overwrite option '%c'", "Unknown view option '%c'",
+#	"Unknown option '%c'"
+%errcode EXIT_OPTION
+en: Unknown directory option '%c'
+en: Unknown overwrite option '%c'
+en: Unknown view option '%c'
+en: Unknown option '%c'
+de: Unbekannte Verzeichnis-Option '%c'
+de: Unbekannte $(uU)berschreibe-Option '%c'
+de: Unbekannte Anseh-Option '%c'
+de: Unbekannte Option '%c'
+nl: Onbekende pad optie '%c'
+nl: Onbekende overschrijf optie '%c'
+nl: Onbekende bekijk optie '%c'
+nl: Onbekende optie '%c'
+it: Opzione per directory sconosciuta: '%s'
+it: Opzione per modifica sconosciuta: '%'
+it: Opzione per visualizzazione sconosciuta: '%'
+it: Opzione sconosciuta: '%s'
+pl: Nieznana opcja katalogu '%c'
+pl: Nieznana opcja zamazywania '%c'
+pl: Nieznana opcja ogl$(oa)dania '%c'
+pl: Nieznana opcja '%c'
+es: Opci$(ao)n de directorio desconocida: '%s'
+es: Opci$(ao)n de sobreescritura desconocida: '%'
+es: Opci$(ao)n de visualizaci$(ao)n desconocida: '%'
+es: Opci$(ao)n desconocida: '%s'
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+bv: Kenn mi mid da Verzeichnis-Option '%c' ned aus
+bv: Kenn mi mid da $(uU)berschreibe-Option '%c' ned aus
+bv: Kenn mi mid da Anseh-Option '%c' ned aus
+bv: Kenn mi mid da Option '%c' ned aus
+
+%end standarderrors
+
+%begin minorerrors
+
+# Minor errors
+
+# User hasn't specified a userID to use, cannot find secret, public key for
+# a given usedID, can't read random number seed file for encryption:
+#	"Missing userID for encryption/authentication",
+#	"Cannot find secret key for userID '%s'",
+#	"Cannot find secret key - cannot decrypt data\n",
+#	"Cannot find public key for userID '%s"', "Cannot read random seed file"
+%errcode EXIT_PASS
+en: Missing userID for encryption/authentication
+en: Cannot find secret key for userID '%s'
+en: Cannot find secret key - cannot decrypt data
+en: Cannot find public key for userID '%s'
+en: Cannot read random seed file
+de: Fehlender userID f$(uu)r verschl$(uu)sselung/authentisierung
+de: Geheimschl$(uu)ssel f$(uu)r userID '%s' nicht gefunden
+de: Geheimschl$(uu)ssel nicht gefunden - Entschl$(uu)sselung nicht m$(uo)glich
+de: $(uO)ffentlicher Schl$(uu)ssel f$(uu)r userID '%s' nicht gefunden
+de: Lesen der Zufallsdatei unm$(uo)glich
+nl: Missende userID voor encriptie/autenticieteit
+nl: Kan geheime sleutel niet vinden voor userID '%s'
+nl: Kan geheime sleutel niet vinden - kan informatie niet ontcijferen
+nl: Kan publieke sleutel niet vinden voor userID '%s'
+nl: Kan het random seed bestand niet lezen
+it: Manca User ID per crittografare/autenticare
+it: Chiave segreta introvabile per User ID '%s'
+it: Chiave segreta introvabile - impossibile decrittografare i dati
+it: Chiave pubblica introvabile per User ID '%s'
+it: File di numeri casuali illeggibile
+pl: Brak userID dla kodowania/identyfikacji
+pl: Nie mog$(oe) znale$(az)$(ac) tajnego klucza dla userID '%s'
+pl: Nie mog$(oe) znale$(az)$(ac) tajnego klucza - nie mog$(oe) rozkodowa$(ac) danych
+pl: Nie mog$(oe) znale$(az)$(ac) publicznego klucza dla userID '%s'
+pl: Nie mog$(oe) odczyta$(ac) pliku liczb losowych
+es: Falta el ID de usuario para encriptar/autentificar
+es: No se encuentra la clave secreta para el usuario ID '%s'
+es: No se encuentra la clave secreta - imposible desencriptar datos
+es: No se encuentra la clave p$(au)blica para el usuario ID '%s'
+es: No se puede leer el fichero semilla.
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+bv: Koa userID fia d'verschlisselung/authentisierung
+bv: Konn an Geheimschlissel fia userID '%s' ned find'n
+bv: Geheimschlissel ned g'funden - Konn ned Entschlisseln
+bv: Konn an $(uO)ffentlichen Schlissel fia userID '%s' ned find'n
+bv: Lesen der Zufallsdatei unm$(uo)glich
+
+# Re-enterd password differs from original one: "Passwords not the same"
+%errcode EXIT_PASS
+en: Passwords not the same
+de: Passwort nicht $(uu)bereinstimmend
+nl: Paswoord niet het zelfde
+it: Parole chiave non identiche
+pl: To has$(sl)o jest inne
+es: La palabra clave no coincide
+ch: !!ch
+bv: Passw$(uo)rter san ned gleich
+
+# Attempt to change archive with -k (the '-k' means "Delete the archive
+# before processing it" making further processing impossible), to change
+# multipart archive, to change encrypted archive, to block-encrypt
+# unencrypted archive, or to change unit-compressed archive
+#	"Cannot change deleted archive", "Cannot change multipart archive",
+#	"Cannot change encrypted archive", "Cannot change unencrypted archive",
+#	"Cannot change unit-compressed archive".
+%errcode EXIT_CHANGE
+en: Cannot change deleted archive
+en: Cannot change multipart archive
+en: Cannot change encrypted archive
+en: Cannot change unencrypted archive
+en: Cannot change unit-compressed archive
+de: $(uA)nderung eines gel$(uo)schten Archivs unm$(uo)glich
+de: $(uA)nderung eines vielteiligen Archives unm$(uo)glich
+de: $(uA)nderung eines verschl$(uu)sselten Archives unm$(uo)glich
+de: $(uA)nderung eines unverschl$(uu)sselten Archives unm$(uo)glich
+de: $(uA)nderung eines einheitlich-komprimierten Archives unm$(uo)glich
+nl: Een verwijderd archief kan niet veranderd worden
+nl: Een archief uit meerdere delen kan niet veranderd worden
+nl: Een cijfer bestand kan niet veranderd worden
+nl: Een ontcijfered bestand kan niet veranderd worden
+nl: Een eenheid gekompreseerd bestand kan niet veranderd worden
+it: Impossibile modificare un' archivio cancellato
+it: Impossibile modificare un' archivio multiplo
+it: Impossibile modificare un' archivio crittografato
+it: Impossibile modificare un' archivio in chiaro
+it: Impossibile modificare un' archivio compresso per unit$(ga)
+pl: Nie mog$(oe) zmieni$(ac) skasowanego archiwum
+pl: Nie mog$(oe) zmieni$(ac) archiwum wielocz$(oe)$(as)ciowego
+pl: Nie mog$(oe) zmieni$(ac) archiwum zakodowanego
+pl: Nie mog$(oe) zmieni$(ac) archiwum niezakodowanego
+pl: Nie mog$(oe) zmieni$(ac) archiwum spakowanego ca$(sl)o$(as)ciowo
+es: No es posible modificar un archivo borrrado
+es: No es posible modificar un archivo m$(au)ltiple
+es: No es posible modificar un archivo encriptado
+es: No es posible modificar un archivo en claro
+es: No es posible modificar un archivo comprimido unitariamente
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+bv: Konn a g'l$(uo)schts Archiv ned $(uA)ndern
+bv: Konn a fuiteiligs Archiv ned $(uA)ndern
+bv: Konn a verschl$(uu)sslt's Archiv ned $(uA)ndern
+bv: Konn a unverschl$(uu)sslt's Archiv ned $(uA)ndern
+bv: Konn a einheitlich-komprimierds Archiv ned $(uA)ndern
+
+# The long argument format is not supported by this version.  HPACK has a
+# so-called 'long' argument format which takes full words as arguments
+# instead of individual letters.  This is for OS-specific options.  Some
+# OS's don't use this : "Long argument format not supported in this version"
+%errcode EXIT_NOLONG
+en: Long argument format not supported in this version
+de: Langes Befehlsformat nicht unterst$(uu)tzt in dieser Version
+nl: Lang argument formaat niet ondersteund in deze versie
+it: Il formato esteso per le opzioni non $(ge) disponibile
+pl: D$(sl)ugie nazwy argument$(so)w nie dzia$(sl)aj$(oa) w tej wersji
+es: Formato extenso de argumentos no soportado en est$(aa) verso$(ao)n
+ch: !!ch
+bv: s'Lange Befehlsformat is in der Version ned unterst$(uu)tzt
+
+# Errors in wildcards:  Note that the Dutch and Italian versions must be
+# broken into two halves since they are embedded inside a longer error
+# string.  The amount of whitespace after the newline should be equal in
+# length to the string "Fout: ", which is 6 characters (Dutch), or the length
+# of the string "Errore: ", which is 8 characters, one 8-charcater tab
+# (Italian), or the length of the string "Error: ", which is 7 characters
+# (Spanish):
+#	"Bad wildcard format in %s", "Wildcard expression too complex",
+#   "Cannot use wildcards in external pathname %s".
+%errcode EXIT_BADWILD
+en: Bad wildcard format in %s
+en: Wildcard expression too complex
+en: Cannot use wildcards in external pathname %s
+de: Fehler im Platzhalterausdruck %s
+de: Platzhalterausdruck zu komplex
+de: Platzhalterausdruck im suchweg %s nicht erlaubt
+nl: Slechte algemeene uitdrukking in %s
+nl: Algemeene uitdrukken te complex
+nl: Een algemeene uitdrukking kan niet gebruikt worden\n      in extern pad naam %s
+it: Formato wildcard in %s invalido
+it: Espressione wildcard eccessivamente complessa
+it: L' utilizzo delle wildcard nella path esterna\n\t %s non $(ge) possibile
+pl: Z$(sl)y format wildcard w %s
+pl: Zbyt skomplikowany wildcard
+pl: Nie mog$(oe) u$(dz)y$(ac) wildcards w %s
+es: Formato de comod$(ai)n en %s inv$(aa)lido
+es: Expresi$(ao)n de comod$(ai)n demasiado compleja
+es: La utilizaci$(ao)n de comodines en el camino externo\n\       %s no es posible
+ch: !!ch
+ch: !!ch
+ch: !!ch
+bv: F$(ua)lla im Blodzhoidaausdruck %s
+bv: Da Blodzhoidaausdruck is z'komplex
+bv: Blodzhoidaausdruck im suchweg %s is ned erlaubt
+
+# Attempt to use both conventional- and public-key encryption on the same
+# data.  Note that the German, Italian and Polish versions must be broken
+# into two halves since they are embedded inside a longer error string.
+# The amount of whitespace after the newline should be equal in length to
+# the string "Fehler: ", which is 8 characters, one 8-character tab (German),
+# or the length of the string "Errore: ", which is 8 characters, one
+# 8-character tab (Italian), or the length of the string "Blad: ", which is
+# 6 characters (Polish), or the length of the string "Error: ", which is
+# 7 characters (Spanish):
+#   "Cannot use both conventional and public-key encryption"
+%errcode EXIT_SECURITY
+en: Cannot use both conventional and public-key encryption
+de: Gleichzeitige Nutzung von $(uu)blicher und\n\t$(uo)ffentlicher Verschl$(uu)sselung unm$(uo)glich
+nl: Kan niet beide konventioneel en publieke-sleutel enkriptie gebruiken
+it: Non $(ge) possibile utilizzare sia la crittografia a \n\tchiave pubblica che convenzionale
+pl: Nie mog$(oe) u$(dz)y$(ac) klucza zwyk$(sl)ego i \n      publicznego r$(so)wnocze$(as)nie
+es: No es posible utilizar simult$(aa)neamente encriptado \n\       por llave p$(au)blica y convencional
+ch: !!ch
+bv: Gleichzeitige Nutzung von $(uu)blicher und\n\t$(uo)ffentlicher Verschlisselung unm$(uo)glich
+
+# Entire archive is encrypted, cannot process it or its encryption information:
+#	"Cannot process encrypted archive"
+%errcode EXIT_NOCRYPT
+en: Cannot process encrypted archive
+de: Verarbeitung von verschl$(uu)sseltem Archiv unm$(uo)glich
+nl: Kan cijfer archief niet verwerken
+it: Impossibile procedere con file crittografato
+pl: Nie mog$(oe) przetwarza$(ac) zakodowanego archiwum
+es: No es posible procesar un archivo encriptado
+ch: !!ch
+bv: Verarbeitung vom verschlisseltem Archiv unm$(uo)glich
+
+%end minorerrors
+
+#****************************************************************************
+#*																			*
+#*									Warnings								*
+#*																			*
+#****************************************************************************
+
+%begin warnings
+
+# Truncated <count> bytes of Xmodem/Ymodem padding:
+#	"Warning: Truncated %u bytes of EOF padding\n"
+en: Warning: Truncated %u bytes of EOF padding\n
+de: Warnung: Abgerundet wurden %u Bytes vom EOF-$(uU)berschu$(ss)\n
+nl: Waarschuwing: Afgerond werden %u bytes van de EOF-overschot\n
+it: Avviso: Rimossi %s bytes di padding EOF\n
+pl: Uwaga: Obci$(oe)te %u bajt$(so)w wypelnienia ko$(an)cowego\n
+es: Atenci$(ao)n: Se han truncado %s bytes de relleno EOF\n
+ch: !!ch
+bv: Warnung: %u Bytes vom EOF-$(uU)berschu$(ss) san obg'rundt worn\n
+
+# Nonspecific warning + continue yes/no option: "Warning: %s. Continue [y/n] "
+en: Warning: %s. Continue [y/n]$( )
+de: Warnung: %s. Fortsetzen [j/n]$( )
+nl: Waarschuwing: %s. Verder gaan [j/n]$( )
+it: Avviso: %s. Continuo [s/n]$( )
+pl: Uwaga: %s. Kontynuowa$(ac) [t/n]$( )
+es: Atenci$(ao)n: %s. Continuar [s/n]$( )
+ch: !!ch
+bv: Warnung: %s. Waidermacha [j/n]$( )
+
+# Possible error in data: "\nWarning: File may be corrupt"
+en: \nWarning: File may be corrupt
+de: \nWarnung: Datei kann defekt sein
+nl: \nWaarschuwing: Bestand kan defect zijn
+it: \nAvviso: File potrebbe essere danneggiato
+pl: \nUwaga: Plik mo$(dz)e by$(ac) uszkodzony
+es: \nAtenci$(ao)n: El fichero puede estar corrupto
+ch: !!ch
+bv: \nWarnung: Datei kannt hi sei
+
+# Data contained uncorrectable errors: "Data contained uncorrectable errors"
+en: Warning: Data contained uncorrectable errors
+de: Warnung: Datei enthielt unkorregierbare Fehler
+nl: Waarschuwing: Data bevat onherstelbare fouten
+it: Avviso: Dati contengono errori la cui correzione $(ge) impossibile
+pl: Uwaga: Dane uszkodzone w spos$(so)b nieodwracalny
+es: Atenci$(ao)n: Los datos conten$(ai)an errores irrecuperables
+ch: !!ch
+bv: Warnung: Datei hod unkorregierbare F$(ua)lla drin
+
+# Can't find public key to perform data/archive authentication check:
+#	"Warning: Cannot find public key - cannot perform authentication check\n"
+en: Warning: Cannot find public key - cannot perform authentication check\n
+de: Warnung: Kein $(uo)ffentlicher Schl$(uu)ssel gefunden - Authentisierung unm$(uo)glich\n
+nl: Waarschuwing: Publieke sleutel niet gevonden - kan geen autent. kontrole doen\n
+it: Avviso: Chiave pubblica introvabile - impossibile controllare autenticit$(ga)\n
+pl: Uwaga: Nie mog$(oe) znale$(dz)$(ac) klucza publicznego - niemo$(dz)liwe sprawdzenie autentyczno$(as)ci\n
+es: Atenci$(ao)n: No encuentra la llave p$(au)blica - imposible controlar la autenticidad\n
+ch: !!ch
+bv: Warnung: Koa $(uo)ffentlicher Schlissel g'funden - Authentisierung g$(ua)d ned\n
+
+# Authentication information is corrupt, can't perform data/archive
+# authentication check:
+#	"Warning: Authentication data corrupted - cannot perform authentication check\n"
+en: Warning: Authentication data corrupted - cannot perform authentication check\n
+de: Warnung: Authentisierungsdaten fehlerhaft - Authentisierung unm$(uo)glich\n
+nl: Waarschuwing: Autenticiteits info. is corrupt - kan geen autent. kontrole doen\n
+it: Avviso: Dati autenticazione danneggiati - impossibile controllare autenticit$(ga)\n
+pl: Uwaga: Informacja o autentyczno$(as)ci uszkodzona - niemo$(dz)liwe sprawdzenie autentyczno$(as)ci\n
+es: Atenci$(ao)n: Datos de autentificaci$(ao)n corruptos - imposible controlar autenticidad\n
+ch: !!ch
+bv: Warnung: Authentisierungsdaten ham f$(ua)lla - Authentisierung g$(ua)d ned\n
+
+# Multipart archive section is too short to store on seperate disk:
+#	"\nWarning: Archive section too short, skipping..."
+en: \nWarning: Archive section too short, skipping...
+de: \nWarnung: Archivteil zu kurz, wird $(uu)bersprungen...
+nl: \nWaarschuwing: Archief sektie is te groot, wordt overgeslagen...
+it: \nAvviso: Sezione dell' archivio troppo corta, ignorata...
+pl: \nUwaga: Za kr$(so)tka porcja archiwum, przeskakuj$(oe)...
+es: \nAtenci$(ao)n: Secci$(ao)n de archivo demasiado corta, ignorada...
+ch: !!ch
+bv: \nWarnung: Archivteil is z'kurz, werd $(uu)wwasprunga...
+
+# Can't open data file <filename> - skipping:
+#	"Warning: Cannot open data file %s - skipping\n"
+en: Warning: Cannot open data file %s - skipping\n
+de: Warnung: Datendatei %s kann nicht ge$(uo)ffnet werden - wird $(uu)bersprungen\n
+nl: Waarschuwing: Kan bestand %s niet openen - overgeslagen\n
+it: Avviso: Apertura del file di dati %s impossibile - ignorato\n
+pl: Uwaga: Nie mog$(oe) otworzy$(ac) pliku %s - przeskakuj$(oe)\n
+es: Atenci$(ao)n: No es posible abrir el fichero de datos %s - ignorado\n
+ch: !!ch
+bv: Warnung: Datendatei %s konn ned aufg'macht wern - werd $(uu)wwasprunga\n
+
+# Can't open script file <filename> - skipping:
+#	"Warning: Cannot open script file %s - skipping\n"
+en: Warning: Cannot open script file %s - skipping\n
+de: Warnung: Skriptdatei %s kann nicht ge$(uo)ffnet werden - wird $(uu)bersprungen\n
+nl: Waarschuwing: Script bestand %s kan niet geopend worden - overgeslagen\n
+it: Avviso: Apertura del file di script %s impossibile - ignorato\n
+pl: Uwaga: Nie mog$(oe) otworzy$(ac) skryptu %s - przeskakuj$(oe)\n
+es: Atenci$(ao)n: No es posible abrir el fichero de $(ao)rdenes %s - ignorado\n
+ch: !!ch
+bv: Warnung: Skriptdatei %s konn ned aufg'macht wern - werd $(uu)wwasprunga\n
+
+# Directory conflicts with existing file.  Note that this string is usually
+# long enough to require it to be broken into two halves, since it is
+# embedded inside a longer prompt string.  The amount of whitespace after
+# the newline should be equal in length to the string "Warning: ", which for
+# the case of English and German is 9 characters, one 8-character tab and
+# a space, for Dutch is 14 characters, one 8-character tab and 6 spaces),
+# for Italian is 8 characters, one 8-character tab, for Polish is 7
+# characters, and for Spanish is 10 characters, one 8-character tab and two
+# spaces:
+#	"Warning: Directory %s conflicts with\n\t existing file - skipping\n"
+en: Warning: Directory %s conflicts with\n\t existing file - skipping\n
+de: Warnung: Verzeichnis %s widersteht \n\t existierende Datei - wird $(uu)bersprungen\n
+nl: Waarschuwing: Pad %s is in konflict met\n\t      bestaand bestand - overgeslagen\n
+it: Avviso: Directory %s in conflitto con\n\tfile esistente - ignorata\n
+pl: Uwaga: Konflikt nazwy katalogu %s z\n       istniej$(oa)cym plikiem\n
+es: Atenci$(ao)n: El directorio %s coincide con\n\t  un fichero existente - ignorado\n
+ch: !!ch
+bv: Warnung: Verzeichnis %s widerst$(ua)d \n\t existiernde Datei - werd $(uu)wwasprunga\n
+
+# Files were corrupted.  There are two message, one for the singular case, one
+# for other cases.
+en: \nWarning: One file was corrupt
+en: \nWarning: %2d %s were corrupt\n
+de: \nWarnung: Eine Datei war defekt
+de: \nWarnung: %2d %s waren defekt\n
+nl: \nWaarschuwing: Een bestand was defect
+nl: \nWaarschuwing: %2d %s waren defect\n
+it: \nAvviso: Un file $(ge) danneggiato
+it: \nAvviso: %2d %s sono danneggiati\n
+pl: \nUwaga: Jeden z plik$(so)w by$(sl) uszkodzony
+pl: \nUwaga: %2d %s by$(sl)y uszkodzone\n
+es: \nAtenci$(ao)n: Un fichero est$(aa) corrupto
+es: \nAtenci$(ao)n: %2d %s est$(aa)n corruptos\n
+ch: !!ch
+ch: !!ch
+bv: \nWarnung: Oa Datei war hi
+bv: \nWarnung: %2d %s warn hi\n
+
+%end warnings
+
+#****************************************************************************
+#*																			*
+#*								General Messages							*
+#*																			*
+#****************************************************************************
+
+%begin messages
+
+# Verify multipart archive authenticity { yes/no }.  Ask the user whether
+# an authenticity check on a multipart archive should be performed:
+#	"Verify multipart archive authenticity"
+en: Verify multipart archive authenticity
+de: Soll das vielteilige Archiv authentisiert werden
+nl: Kontroleer veeldelig bestands autenticiteit
+it: Verifica dell' autenticit$(ga) dell' archivio multiplo
+pl: Czy sprawdzi$(ac) autentyczno$(as)$(ac) archiwum wielocz$(oe)$(as)ciowego
+es: Verificar autenticidad del archivo multiparte
+ch: !!ch
+bv: Soi's vuiteilige Archiv authentisiert wern
+
+# Archive has failed authentication check { continue yes/no }:
+#	"Archive fails authenticity check"
+en: Archive fails authenticity check
+de: Archiv Authentisierung schlug fehl
+nl: Archief faalt autenticiteits kontrole
+it: L' archivio non $(ge) autenticato
+pl: Archiwum nie jest autentyczne
+es: El archivo no ha pasado la autentificaci$(ao)n
+ch: !!ch
+bv: Archiv-Authentisierung hod ned hi-g'haud
+
+# Verifying archive authenticity: "Verifying archive authenticity - please wait\n"
+en: Verifying archive authenticity - please wait\n
+de: Am Archiv-authentisieren - bitte warten\n
+nl: Archief autenticiteits kontrole - aub. wachten\n
+it: Verifca autenticit$(ga) dell' archivio - attendere prego\n
+pl: Sprawdzam autentyczno$(as)$(ac) archiwum - prosz$(oe) czeka$(ac)\n
+es: Verificando la autenticidad del archivo - espere un poco\n
+ch: !!ch
+bv: Am Archiv-authentisiern - bitte wart'n\n
+
+# Changing this archive will destroy its security information
+# { continue yes/no }: "Authentication information will be destroyed"
+en: Authentication information will be destroyed
+de: Authentisierungsinformation wird verlorengehen
+nl: Autenticiteits informatie zal vernietigd worden
+it: Informazioni per l' autentica verranno distrutte
+pl: Informacja o autentyczno$(as)ci zostanie zniszczona
+es: La informaci$(ao)n de autentificaci$(ao)n ser$(aa) destru$(ai)da
+ch: !!ch
+bv: Authentisierungsinformation werd verlor'nge
+
+# Archive directory appears to be corrupted { continue yes/no },
+# Archive directory appears to be corrupted, probably due to use of an
+# incorrect password { continue yes/no }.  Note that this string is usually
+# long enough to require it to be broken into two halves, since it is
+# embedded inside a longer prompt string.  The amount of whitespace after
+# the newline should be equal in length to the string "Warning: ", which for
+# the case of English and German is 9 characters, one 8-character tab and
+# a space, for Dutch is 14 characters, one 8-character tab and 6 spaces,
+# for Italian is 8 characters, one 8-character tab, for Polish is 7 characters,
+# and for Spanish is 10 characters, one 8-character tab and two spaces:
+#	"Archive directory corrupted",
+#	"Archive directory corrupted, probably due to\n\t incorrect password"
+en: Archive directory corrupted
+en: Archive directory corrupted, probably due to\n\t incorrect password
+de: Archivverzeichnis fehlerhaft
+de: Archivverzeichnis fehlerhaft, wahrscheinlich durch\n\t fehlerhaftes Passwort
+nl: Archief pad is fout
+nl: Archief pad is fout, waarschijnlijk door\n\t      een inkorect paswoord
+it: Directory dell' archivio danneggiata
+it: Directory dell' archivio danneggiata, probabilmente\n\tdovuto ad una parola chiave errata
+pl: Katalog archiwum uszkodzony
+pl: Katalog archiwum uszkodzony, przypuszczalnie\n       z$(sl)e has$(sl)o
+es: Directorio de archivo corrupto
+es: Directorio de archivo corrupto, probablemente\n\t  debido a una palabra clave err$(ao)nea
+ch: !!ch
+ch: !!ch
+bv: Archivverzeichnis is hi
+bv: Archivverzeichnis is hi, wahrscheinlich durch\n\t a foisch's Passwort
+
+# Processing archive directory...
+#	"Processing archive directory..."
+en: Processing archive directory...
+de: Archivverzeichnis wird bearbeitet...
+nl: Archief pad aan het verwerken...
+it: Analisi della directory dell' archivio...
+pl: Przetwarzam katalog archiwum...
+es: Procesando directorio de archivo...
+ch: !!ch
+bv: Archivverzeichnis werd bearweit'...
+
+# <option> yes/no prompt (eg "Continue [y/n]"): "%s [y/n] "
+en; %s [y/n]$( )
+de: %s [j/n]$( )
+nl: %s [j/n]$( )
+it: %s [s/n]$( )
+pl: %s [t/n]$( )
+es: %s [s/n]$( )
+ch: !!ch
+bv: %s [j/n]$( )
+fr: %s [o/n]$( )
+
+# <option> <modifier> yes/no/all prompt (eg "Overwrite <filename> [y/n/a]"):
+#	"%s %s [y/n/a] "
+en: %s %s [y/n/a]$( )
+de: %s %s [j/n/a]$( )
+nl: %s %s [j/n/a]$( )
+it: %s %s [s/n/t]$( )
+pl: %s %s [t/n/w]$( )
+es: %s %s [s/n/t]$( )
+ch: !!ch
+bv: %s %s [j/n/a]$( )
+
+# Skipping <filename>: "Skipping %s\n"
+en: Skipping %s\n
+de: %s wird $(uu)bersprungen\n
+nl: %s wordt overgeslagen
+it: %s ignorato\n
+pl: Przeskakuj$(oe) %s\n
+es: Ignorando %s\n
+ch: !!ch
+bv: %s werd $(uu)wwasprunga\n
+
+# Archived data is encrypted: "Data is encrypted"
+en: Data is encrypted
+de: Daten sind verschl$(uu)sselt
+nl: Informatie is versleuteld
+it: I dati sono crittografati
+pl: Dane s$(oa) zakodowane
+es: Los datos est$(aa)n encriptados
+ch: !!ch
+bv: Daten san verschlisseld
+
+# Some sort of problem processing the encryption information:
+#	"Cannot process encryption information"
+en: Cannot process encryption information
+de: Bearbeitung der Verschl$(uu)sselung unm$(uo)glich
+nl: Verwerken van de versleutelde informatie is onmogelijk
+it: Impossibile analizzare informazione crittografica
+pl: Nie mog$(oe) przetworzy$(ac) zakodowanej informacji
+es: No es posible procesar la informaci$(ao)n de encriptado
+ch: !!ch
+bv: Bearbeitung fon da Verschlisselung g$(ua)d ned
+
+# Can't open data file to extract data to:
+#	"Cannot open data file"
+en: Cannot open data file
+de: Datendatei kann nicht ge$(uo)ffnet werden
+nl: Informatie bestand kan niet geopend worden
+it: Impossibile aprire file di dati
+pl: Nie mog$(oe) otworzy$(ac) pliku danych
+es: No es posible abrir el fichero de datos
+ch: !!ch
+bv: Datendatei konn ned aufgmacht wern
+
+# File is being extracted - Extracting { filename }.  The German
+# version is somewhat kludged since German has "File is being extracted"
+# rather than "Extracting file", but we need to have the filename last.
+# Polish is similar - 'Rozpakowuje' means: I am extracting:
+#	"Extracting"
+en: Extracting
+de: Entpacke
+nl: Aan het ontpakken
+it: Estraendo
+pl: Rozpakowuj$(oe)
+es: Extrayendo
+ch: !!ch
+bv: Entpacke
+
+# { Processing } <filename> as { new filename }
+# { Processing filename } as <new filename>
+# (eg "Extracting <filename> as <truncated filename>"): " %s as"
+# (eg "Creating <directory> as <truncated directory>"): " as %s"
+en:  %s as
+en:  as %s
+de:  %s als
+de:  als %s
+nl:  %s als
+nl:  als %s
+it:  %s come
+it:  come %s
+pl:  %s jako
+pl:  jako %s
+es:  %s como
+es:  como %s
+ch: !!ch
+ch: !!ch
+bv:  %s ois
+bv:  ois %s
+
+# Don't know how to unpack this data format: "Unknown archiving method"
+en: Unknown archiving method
+de: Unbekannte Archivierungsmethode
+nl: Onbekende Archief metode
+it: Metodo di compressione sconosciuto
+pl: Nieznana metoda pakowania
+es: M$(ae)todo de compresi$(ao)n desconocido
+ch: !!ch
+bv: Kenn mi mid da Archivierungsmethode ned aus
+
+# Skipping <filename>: " - skipping %s"
+en:  - skipping %s
+de:  - %s wird $(uu)bersprungen
+nl:  - %s wordt overgeslagen
+it:  - %s ignorato
+pl:  - przeskakuj$(oe) %s
+es:  - ignorando %s
+ch: !!ch
+bv:  - %s werd $(uu)wwasprunga
+
+# Won't overwrite the existing file <filename>: "Won't overwrite existing file %s\n"
+en: Won't overwrite existing file %s\n
+de: Existierende Datei %s wird nicht $(uu)berschrieben\n
+nl: Bestaand bestand %s word niet overschreven\n
+it: Il file %s gi$(ga) esistente non verr$(ga) sovrascritto\n
+pl: Nie zama$(dz)$(oe) istniej$(oa)cego pliku %s\n
+es: El fichero existente %s no ser$(aa) sobreescrito\n
+ch: !!ch
+bv: Existiernde Datei %s werd ned $(uu)wwaschrim\n
+
+# <filename> already exists, enter new name to extract under:
+#	"%s already exists: Enter new filename "
+en: %s already exists: Enter new filename$( )
+de: Datei %s existiert bereits: Neuen Dateinamen eingeben$( )
+nl: Bestand %s bestaat al: Geef een nieuwe bestandnaam$( )
+it: %s $(ge) gi$(ga) esistente: Inserire nuovo nome per il file$( )
+pl: %s ju$(dz) istnieje: Podaj now$(oa) nazw$(oe)$( )
+es: %s ya existe: Introduzca nuevo nombre de fichero$( )
+ch: !!ch
+bv: Datei %s gibts scho: Nain Dateinama eigem$( )
+
+# Yet another path too long message: "Path %s... too long\n"
+en: Path %s... too long\n
+de: Suchweg %s... zu lang\n
+nl: Pad %s... te lang\n
+it: Path %s... lunghezza eccessiva\n
+pl: $(aS)cie$(dz)ka %s... jest za d$(sl)uga
+es: Camino %s... demasiado largo\n
+fr: Chemin %s trop long\n
+ch: !!ch
+bv: Da Suchweg %s... is z'lang\n
+
+# { filename } already exists - overwrite { yes/no }: "already exists - overwrite"
+en: already exists - overwrite
+de: existiert bereits - $(uu)berschreiben
+nl: bestaat al - overschrijven
+it: gi$(ga) esistente - sovrascrivo
+pl: ju$(dz) istnieje - zamazuj$(oe)
+es: ya existe - sobreescribir
+fr: existe d$(ge)j$(ga) - a $(ge)craser
+ch: !!ch
+bv: gibts scho - $(uu)berschreim
+
+# Names of various actions to perform on data (eg "Extract file [y/n]"):
+#	"Extract", "Display", "Test"
+en: Extract
+en: Display
+en: Test
+de: Entpacke
+de: Zeige
+de: Teste
+nl: Ontpakken
+nl: Laten zien
+nl: Testen
+it: Estrarre
+it: Visualizzare
+it: Controllare
+pl: Rozpakuj$(oe)
+pl: Wy$(as)wietl$(oe)
+pl: Sprawdzam
+es: Extraer
+es: Visualizar
+es: Comprobar
+ch: !!ch
+ch: !!ch
+ch: !!ch
+bv: Entpacke
+bv: Zoag
+bv: Test
+
+# File tested OK: "\n\tFile tested OK"
+en: \n\tFile tested OK
+de: \n\tDateitest OK
+nl: \n\tBestand OK getest
+it: \n\tFile controllato
+pl: \n\tPlik sprawdzony
+es: \n\tFichero comprobado con $(ae)xito
+ch: !!ch
+bv: \n\tDateitest haud hi
+
+# <count> errors were corrected: "%d errors corrected"
+en: %d errors corrected
+de: %d Fehler wurden korregiert
+nl: %d fouten gecorrigeerd
+it: %d errori corretti
+pl: %d b$(sl)$(oe)d(so)w poprawionych
+es: %d errores corregidos
+ch: !!ch
+bv: %d F$(ua)lla san korregiert worn
+
+# Hit a key to continue prompt: "\nHit a key..."
+en: \nHit a key...
+de: \nEine Taste dr$(uu)cken...
+nl: \nDruk een toets
+it: \nPremere un tasto...
+pl: \nNaci$(as)nij klawisz...
+es: \nPulse una tecla...
+ch: !!ch
+bv: \nA Tasten drucka...
+
+# Adding <filename>: "Adding"
+en: Adding
+de: Addiere
+nl: Bijvoegen
+it: Aggiungendo
+pl: Dodaj$(oe)
+es: A$(sn)adiendo
+ch: !!ch
+bv: Addiere
+
+# Start of error message (eg "Error: Out of disk space"): "\nError: "
+en: \nError:$( )
+de: \nFehler:$( )
+nl: \nFout:$( )
+it: \nErrore:$( )
+pl: \nB$(sl)$(oa)d:$( )
+es: \nError:$( )
+ch: !!ch
+bv: \nF$(ua)lla:$( )
+
+# Serious problem - Error in error recovery routine: "Panic: Error during error recovery"
+en: Panic: Error during error recovery
+de: Panik: Fehler w$(ua)hrend Fehlerbearbeitung
+nl: Paniek: Fout gedurende foutbewerkingen
+it: Panico: Errore durante correzione dell' errore
+pl: Panika: B$(sl)$(oa)d podczas pr$(so)by przetwarzania b$(sl)$(oe)du
+es: Panico: Error durante correcci$(ao)n de errores
+ch: !!ch
+bv: Panik: F$(ua)lla w$(ua)hrend da F$(ua)llabearbeitung
+
+# Creating directory <directory name>: "Creating directory %s"
+en: Creating directory %s
+de: Erstellen des Verzeichnisses %s
+nl: Pad %s aan het maken
+it: Creando directory %s
+pl: Tworz$(oe) katalog %s
+es: Creando directorio %s
+ch: !!ch
+bv: Erstei s'Verzeichnisses %s
+
+# {HPACK is} Processing script file <script file name>:
+#	"Processing script file %s\n"
+en: Processing script file %s\n
+de: Bearbeite die Skriptdatei %s\n
+nl: Script bestand %s aan het verwerken\n
+it: Analisi del file di script %s\n
+pl: Przetwarzam skrypt %s\n
+es: Procesando fichero de comandos %s\n
+ch: !!ch
+bv: Bearwad d'Skriptdatei %s\n
+
+# Low-level errors in the input data: Input line too long in line
+# <line number>, Bad character found in input line <line number>:
+#	"Input line too long in line %d\n", "^ Bad character in input line %d\n"
+en: Input line %s... too long in line %d\n
+en: ^ Bad character in input line %d\n
+de: Eingabe %s... zu lang in Zeile %d\n
+de: ^ Unerlaubtes Zeichen in Zeile %d\n
+nl: !!nl %s... te lang in regel %d\n
+nl: ^ Ongeldig karakter in de !!nl in regel %d\n
+it: Linea %s... lunghezza eccessiva alla linea %d\n
+it: ^ Carattere invalido alla linea %d\n
+pl: Za du$(dz)o znak$(so)w %s... w linii %d\n
+pl: ^ B$(sl)$(oe)dny znak w danych wej$(as)ciowych w %d linii\n
+es: L$(ai)nea de entrada %s... demasiado larga en l$(ai)nea %d\n
+es: ^ Car$(aa)cter inv$(aa)lido en l$(ai)nea de entrada en l$(ai)nea %d\n
+ch: !!ch
+ch: !!ch
+bv: Eigab' %s... is z'lang in Zeil'n %d\n
+bv: ^ Unerlaubts Zeichen in Zeil'n %d\n
+
+# HPACK will exit once a certain error count is reached in a script file
+# (eg "Maximum level of 10 errors detected").
+# Maximum level of { <count> errors detected }: "Maximum level of "
+en: Maximum level of$( )
+de: Maximale Tiefe von$( )
+nl: Maximale diepte van$( )
+it: Livello massimo di$( )
+pl: Maksymalna liczba$( )
+es: Nivel m$(aa)ximo de$( )
+ch: !!ch
+bv: Maximale Diafe von$( )
+
+# Various complaints when parsing script files.  A keyword is a script
+# language keyword like SET or ADD, a variable is a global variable which can
+# be modified by a command, for example the boolean CRYPT.
+#	"Unknown keyword <keyword> on line <line number>",
+#	"Unknown variable <variable> on line <line number>",
+#	"Unterminated string <string> on line <line number>",
+#	"Expected assignment operator before <keyword> on line <line number>",
+#	"Expected keyword <keyword> before <keyword> on line <line number>",
+#	"Unexpected keyword <keyword> on line <line number>"
+en: Unknown command '%s' on line %u\n
+en: Unknown variable '%s' on line %u\n
+en: Unterminated string '%s' on line %u\n
+en: Expected assignment operator before '%s' on line %u\n
+en: Expected keyword '%s' before '%s' on line %u\n
+en: Unexpected keyword '%s' on line %u\n
+de: Unbekannter Befehl '%s' in Zeile %u\n
+de: Unbekannte Variable '%s' in Zeile %u\n
+de: Unbeendete Zeichenkette '%s' in Zeile %u\n
+de: Erwartete Zuweisung vor '%s' in Zeile %u\n
+de: Erwartete Schl$(uu)sselwort '%s' bevor '%s' in Zeile %u\n
+de: Unerwartetes Schl$(uu)sselwort '%s' in Zeile %u\n
+nl: !!nl
+nl: !!nl
+nl: !!nl
+nl: !!nl
+nl: !!nl
+nl: !!nl
+it: Comando sconosciuto '%s' alla linea %u\n
+it: Variabile sconosciuta '%s' alla linea %u\n
+it: Stringa di caratteri non terminata '%s' alla linea %u\n
+it: Manca operatore prima di '%s' alla linea %u\n
+it: Manca parola '%s' prima di '%s' alla linea %u\n
+it: Manca parola '%s' alla linea %u\n
+pl: Nieznana komenda '%s' w linii %u\n
+pl: Nieznana zmienna '%s' w linii %u\n
+pl: Niezako$(an)czony $(sl)ancuch '%s' w linii %u\n
+pl: Oczekiwany operator przypisania przed '%s' w linii %u\n
+pl: Oczekiwane s$(sl)owo kluczowe '%s' przed '%s' w linii %u\n
+pl: Nieoczekiwane s$(sl)owo kluczowe '%s' w linii %u\n
+es: Orden desconocida '%s' en l$(ai)nea %u\n
+es: Variable desconocida '%s' en l$(ai)nea %u\n
+es: Cadena sin final '%s' en l$(ai)nea %u\n
+es: Se esperaba operador de asignaci$(ao)n antes de '%s' en l$(ai)nea %u\n
+es: Se esperaba comando '%s' antes de '%s' en l$(ai)nea %u\n
+es: Comando inesperado '%s' en l$(ai)nea %u\n
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+bv: Unbekannter Befehl '%s' in Zeil'n %u\n
+bv: Unbekannte Variable '%s' in Zeil'n %u\n
+bv: Unbeendete Zeichenkett'n '%s' in Zeil'n %u\n
+bv: Erwartad Zuweisung befor '%s' in Zeil'n %u\n
+bv: Erwartad Schlisselwort '%s' befor '%s' in Zeil'n %u\n
+bv: Unerwart's Schlisselwort '%s' in Zeil'n %u\n
+
+# SQL parsing errors.  A keyword is an SQL command like SELECT and ORDER BY,
+# an option is a SQL option like DESC.
+#	"Expected keyword <keyword> before <keyword> in statement\n  <statement with error>\n",
+#	"Unknown option <option> in statement\n  <statement with error>\n"
+en: Expected keyword '%s' before '%s' in statement\n  '%s'\n
+en: Unknown option '%s' in statement\n  '%s'\n
+de: Erwartete Schl$(uu)sselwort '%s' vor '%s' in Befehl\n  '%s'\n
+de: Unbekannte Option '%s' in Befehl\n  '%s'\n
+nl: !!nl
+nl: !!nl
+it: Manca parola '%s' prima di '%s' nel comando\n  '%s'\n
+it: Opzione sconosciuta '%s' nel comando\n  '%s'\n
+pl: Oczekiwane s$(sl)owo kluczowe '%s' przed '%s' w rozkazie\n  '%s'\n
+pl: Nieznana opcja '%s' w rozkazie\n  '%s'\n
+es: Se esperaba comando '%s' antes de '%s' en sentencia\n  '%s'\n
+es: Opci$(ao) desconocida '%s'en sentencia '%s'\n  '%s'\n
+ch: !!ch
+ch: !!ch
+bv: Erwartad Schlisselwort '%s' befor '%s' in Befehl\n  '%s'\n
+bv: Unbekannte Option '%s' in Befehl\n  '%s'\n
+
+# Adding, checking, leaving directory <directory name>.  The "checking" is
+# in the sense of "processing" rather than "testing":
+#	"Adding directory %s\n", "Checking directory %s\n", "Leaving directory %s\n"
+en: Adding directory %s\n
+en: Checking directory %s\n
+en: Leaving directory %s\n
+de: Addiere das Verzeichnis %s\n
+de: Bearbeite das Verzeichnis %s\n
+de: Verlasse das Verzeichnis %s\n
+nl: Pad %s aan het bijvoegen\n
+nl: Pad %s aan het kontroleren\n
+nl: Pad %s aan het verlaten\n
+it: Aggiungendo directory %s\n
+it: Analizzando directory %s\n
+it: Ignorando directory %s\n
+pl: Dodaj$(oe) katalog %s\n
+pl: Sprawdzam katalog %s\n
+pl: Koniec katalogu %s\n
+es: A$(sn)adiendo directorio %s\n
+es: Analizando directorio %s\n
+es: Ignorando directorio %s\n
+ch: !!ch
+ch: !!ch
+ch: !!ch
+bv: Addiere s'Verzeichnis %s\n
+bv: Bearbeite s'Verzeichnis %s\n
+bv: Verlasse s'Verzeichnis %s\n
+
+# File <filename> already exists in archive - file is being skipped:
+#	"File %s already in archive - skipping\n"
+en: File %s already in archive - skipping\n
+de: Datei bereits im Archiv - wird $(uu)bersprungen\n
+nl: Bestand %s is al in het archief - wordt overgeslagen\n
+it: File %s gi$(ga) in archivio - ignorato\n
+pl: Plik %s ju$(dz) jest w archiwum - przeskakuj$(oe)\n
+es: El fichero %s ya est$(aa) en el archivo - ignorado\n
+ch: !!ch
+bv: Datei is scho im Archiv - werd $(uu)wwasprunga\n
+
+# Names of a few commands: "Add", "Delete"
+en: Add
+en: Delete
+de: Addiere
+de: L$(uo)sche
+nl: Toevoegen
+nl: Verwijderen
+it: Aggiungere
+it: Cancellare
+pl: Doda$(ac)
+pl: Skasowa$(ac)
+es: A$(sn)adir
+es: Borrar
+ch: !!ch
+ch: !!ch
+bv: Addiere
+bv: L$(uo)sch
+
+# Deleting <filename> from archive: "Deleting %s from archive\n"
+en: Deleting %s from archive\n
+de: %s wird aus dem Archiv gel$(uo)scht\n
+nl: %s wordt verwijderd van het archief\n
+it: Cancellando %s dall' archivio\n
+pl: Kasuj$(oe) %s z archiwum\n
+es: Borrando %s del archivo\n
+ch: !!ch
+bv: %s werd aus'm Archiv g'l$(uo)scht\n
+
+# More command names: "Freshen", "Replace"
+en: Freshen
+en: Replace
+de: Frische
+de: Ersetze
+nl: Verfrissen
+nl: Verplaatsen
+it: Rinfrescare
+it: Sostituire
+pl: Od$(as)wie$(dz)enie
+pl: Wymiana
+es: Refrescar
+es: Sustituir
+ch: !!ch
+ch: !!ch
+bv: Frisch
+bv: Ersetz
+
+# Archive is <archive name>: "Archive is '%s'\n\n"
+en: Archive is '%s'\n\n
+de: Archiv ist '%s'\n\n
+nl: Archief is '%s'\n\n
+it: Archivio $(ge) '%s'\n\n
+pl: Archiwum '%s'\n\n
+es: El archivo es '%s'\n\n
+ch: !!ch
+bv: Archiv is '%s'\n\n
+
+# Archive is uptodate (ie Freshen command doesn't cause any changes):
+#	"Archive is uptodate"
+en: Archive is uptodate
+de: Archiv ist auf dem neusten Stand
+nl: Archief is bijgewerkt
+it: Archivio aggiornato
+pl: Archiwum jest aktualne
+es: El archivo est$(aa) actualizado
+ch: !!ch
+bv: Archiv is auf'm naist'n Stand
+
+# Finished processing archive(s): "\nDone"
+en: \nDone\n
+de: \nFertig\n
+nl: \nKlaar\n
+it: \nTerminato\n
+pl: \nGotowe\n
+es: \nAcabado\n
+ch: !!ch
+bv: \nFerdig\n
+fr: \nTermin$(ge)\n
+
+# Directory: <directory name>: "\nDirectory: "
+en: \nDirectory:$( )
+de: \nVerzeichnis:$( )
+nl: \nPad:$( )
+it: \nDirectory:$( )
+pl: \nKatalog:$( )
+es: \nDirectorio:$( )
+ch: !!ch
+bv: \nVerzeichnis:$( )
+
+# Creation date of directory/file:
+#	"\n\tCreated %02d/%02d/%02d, %02d:%02d:%02d\n",
+en: \n\tCreated %02d/%02d/%02d, %02d:%02d:%02d\n
+de: \n\tErstellt %02d/%02d/%02d, %02d:%02d:%02d\n
+nl: \n\tGemaakt %02d/%02d/%02d, %02d:%02d:%02d\n
+it: \n\tCreato il %02d/%02d/%02d, %02d:%02d:%02d\n
+pl: \n\tUtworzony %02d.%02d.%02d, %2d:%02d:%02d\n
+es: \n\tCreado el %02d/%02d/%02d, %02d:%02d:%02d\n
+ch: !!ch
+bv: \n\tErstaid %02d/%02d/%02d, %02d:%02d:%02d\n
+
+# Password is too short or too long:
+#	"\rPassword must be between 8 and 80 characters long"
+en: \rPassword must be between 8 and 80 characters long
+de: \rPasswortl$(ua)nge mu$(ss) zwischen 8 und 80 Zeichen liegen
+nl: \rPaswoord moet tussen 8 en 80 karakters lang zijn
+it: \rLa parola chiave deve essere tra gli 8 e gli 80 caratteri di lunghezza
+pl: \rHas$(sl)o musi mie$(ac) d$(sl)ugo$(as)$(ac) pomi$(oe)dzy 8 a 80 znak$(so)w
+es: \rLa palabra clave debe tener entre 8 y 80 caracteres de longitud
+ch: !!ch
+bv: \rPasswortleng muas zwischen 8 und 80 Zeichen sai
+
+# Prompt for entry of main and secondary (auxiliary) passwords, and for
+# reentry of either password: "Please enter password (8..80 characters): ",
+#	"Please enter secondary password (8..80 characters): ",
+#	"Please reenter password to confirm: "
+en: Please enter password (8..80 characters):$( )
+en: Please enter secondary password (8..80 characters):$( )
+en: Reenter password to confirm:$( )
+de: Bitte ein Passwort eingeben (8..80 Zeichen):$( )
+de: Bitte ein sekund$(ua)res (Zusatz-)Passwort eingeben (8..80 Zeichen):$( )
+de: Zur Best$(ua)tigung das Passwort nochmal eingeben:$( )
+nl: Aub paswoord invoeren (8..80 karakters):$( )
+nl: Aub tweede paswoord invoeren (8..80 karakters):$( )
+nl: Paswoord weer invoeren voor verificatie:$( )
+it: Inserire parola chiave (8..80 caratteri):$( )
+it: Inserire parola chiave secondaria (8..80 caratteri):$( )
+it: Reinserire parola chiave per confermare:$( )
+pl: Prosz$(oe) poda$(ac) has$(sl)o (8..80 znak$(so)w):$( )
+pl: Prosz$(oe) poda$(ac) dodatkowe has$(sl)o (8..80 znak$(so)w):$( )
+pl: Prosz$(oe) powt$(so)rzy$(ac) has$(sl)o dla potwierdzenia:$( )
+es: Por favor introduzca la palabra clave (8..80 caracteres):$( )
+es: Por favor introduzca la palabra clave secundaria (8..80 caracteres):$( )
+es: Vuelva a introducir la palabra clave para confirmar:$( )
+ch: !!ch
+ch: !!ch
+ch: !!ch
+bv: Bitte a Passwort eigem (8..80 Zeichen):$( )
+bv: Bitte ein sekund$(ua)rs (Zusatz-)Passwort eigem (8..80 Zeichen):$( )
+bv: Zur Best$(ua)tigung s'Passwort nommoi eigem:$( )
+
+# Prompt for entry of password to decrypt PKC secret key, and warning if
+# password is incorrect: "Please enter password for secret key: ",
+#	"Password is incorrect"
+en: Please enter password for secret key (8..80 characters):$( )
+en: Password is incorrect.
+de: Bitte ein Passwort f$(uu)r den Geheimschl$(uu)ssel eingeben (8..80 Zeichen):$( )
+de: Passwort stimmt nicht.
+nl: Aub. een paswoord invoeren voor de geheime sleutel (8.80 karakters):$( )
+nl: Paswoord klopt niet.
+it: Inserire parola chiave per chiave segreta (8..80 caratteri):$( )
+it: Parola chiave errata.
+pl: Prosz$(oe) poda$(ac) has$(sl)o dla tajnego klucza (8..80 znak$(so)w):$( )
+pl: B$(sl)$(oe)dne has$(sl)o.
+es: Introduzca palabra clave de la llave secreta (8..80 caracteres):$( )
+es: Clave err$(ao)nea.
+ch: !!ch
+ch: !!ch
+bv: Bitte a Passwort fia'n Geheimschlissel eigem (8..80 Zeichen):$( )
+bv: Passwort stimmt ned.
+
+# Data fails authenticity check.  Bad signature from { extra information }
+# or Good signature from { extra information }.
+#	"Warning: Data fails authenticity check!\nBad", "Good"
+en: Warning: Data fails authenticity check!\nBad
+en: Good
+de: Warnung: Beglaubugungstests mi$(ss)lungen!\nSchlechte
+de: Gute
+nl: Waarschuwing: Informatie faalt autenticiteit!\nSlecht
+nl: Goed
+it: Avviso: Dati non passano controllo autenticit$(ga)!\nErrata
+it: Corretta
+pl: Uwaga: Dane nie przesz$(sl)y kontroli autentyczno$(as)ci!\nZ$(sl)y
+pl: Prawid$(sl)owy
+es: Atenci$(ao)n: Los datos no han superado el control de autentificaci$(ao)n)!\nErrata
+es: Correcto
+ch: !!ch
+ch: !!ch
+bv: Warnung: Beglaubugungstest hod ned hi g'haud!\nSchlechte
+bv: Guade
+
+# { Bad/Good } signature from <userid>, made on <date>:
+#	" signature from: %s.\n\tSignature made on %02d/%02d/%02d, %02d:%02d:%02d\n"
+en:  signature from: %s.\n\tSignature made on %02d/%02d/%02d, %02d:%02d:%02d\n
+de:  Signatur von: %s.\n\tSignatur vom %02d/%02d/%02d, %02d:%02d:%02d\n
+nl:  Ondertekend door: %s.\n\tOndertekend op %02d/%02d/%02d, %02d:%02d:%02d\n
+it:  firma da: %s.\n\tFirma del %02d/%02d/%02d, %02d:%02d:%02d\n
+pl:  podpisane przez: %s.\n\tPodpis z$(sl)o$(dz)ony w dniu %02d.%02d.%02d, %2d:%02d:%02d\n
+es:  firma de: %s.\n\tFirma del %02d/%02d/%02d, %02d:%02d:%02d\n
+bv:  Signatur von: %s.\n\tSignatur vom %02d/%02d/%02d, %02d:%02d:%02d\n
+
+# Wait while HPACK performs encryption/authentication calculations:
+#	" - One moment..."
+en:  - One moment...
+de:  - Einen Moment...
+nl:  - Een momentje aub...
+it:  - Attendere prego...
+pl:  - Chwila...
+es:  - Espere un momento...
+ch: !!ch
+bv:  - Oan Moment...
+
+# This is part { part-number } of a multipart archive:
+#	"This is part %u of a multipart archive\n"
+en: This is part %u of a multipart archive\n
+de: Dies ist Teil %u von einem vielteiligen Archiv\n
+nl: Dit is deel %u van een veeldelig archief\n
+it: Questa $(ge) la sezione %u di un' archivio multiplo\n
+pl: To jest cze$(as)$(ac) %u archiwum wielocz$(oe)$(as)ciowego\n
+es: Esta es la parte %u de un archivo multiparte\n
+ch: !!ch
+bv: Des is Teil %u von an vuiteiligen Archiv\n
+
+# Various messages for multipart archives:
+# Please insert the
+# ( next disk | previous disk | disk containing )
+# ( part <count> | the last part )
+# of this archive
+# and press a key:
+#	"Please insert the ", "next disk", "previous disk", "disk containing ",
+#	"part %u", "the last part", " of this archive", " and press a key"
+en: Please insert the$( )
+en: next disk
+en: previous disk
+en: disk containing$( )
+en: part %u
+en: the last part
+en:  of this archive
+en:  and press a key
+de: Bitte die$( )
+de: n$(ua)chste Diskette eingeben
+de: vorhergehende Diskette eingeben
+de: Diskette mit$( )
+de: Teil %u
+de: dem letzten Teil
+de:  von diesem Archiv eingeben
+de:  und eine Taste dr$(uu)cken...
+nl: Aub leg in de$( )
+nl: volgende schijf
+nl: voorgaande schijf
+nl: schijf bevat$( )
+nl: deel %u
+nl: het laatste deel
+nl:  van dit archief
+nl:  en druk een toets
+it: Inserire il$( )
+it: disco successivo
+it: disco precedente
+it: disco contenente$( )
+it: parte %u
+it: parte finale
+it:  di questo archivio
+it:  e premere un tasto
+pl: Prosz$(oe) w$(sl)o$(dz)y$(ac)
+pl: nast$(oe)pn$(oa) dyskietk$(oe)
+pl: poprzedni$(oa) dyskietk$(oe)
+pl: dyskietk$(oe) zawieraj$(oa)c$(oa)
+pl: cz$(oe)$(as)$(ac) %u
+pl: ostatni$(oa) cz$(oe)$(as)$(ac)
+pl:  tego archiwum
+pl:  i nacisn$(oa)$(ac) klawisz
+es: Inserte el$( )
+es: disco siguiente
+es: disco anterior
+es: disco que contiene$( )
+es: parte %u
+es: la $(au)ltima parte
+es:  de este archivo
+es:  y pulse una tecla
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+bv: Bitte de$( )
+bv: n$(ua)xte Diskette reigem
+bv: vorhergehende Diskette reigem
+bv: Diskette mid$( )
+bv: Teil %u
+bv: dem letzten Teil
+bv:  vom Archiv reigem
+bv:  und a Tasten drucka...
+
+# HPACK is continuing... { after pause for next disk in archive }:
+#	"Continuing... "
+en: Continuing...$( )
+de: Archiv wird fortgesetzt...$( )
+nl: Aan het voortzetten...$( )
+it: Continuando...$( )
+pl: Kontynuuj$(oe)...$( )
+es: Continuando...$( )
+ch: !!ch
+bv: Archiv werd fortg'setzt...$( )
+
+# Prompts when displaying the help screens.  These are displayed at the bottom
+# of the screen and either prompt the user on how to continue or tell them
+# that they are at the end of the information:
+#    "More -- %2d%% -- Hit space for next screen, Enter for new line, 'Q' to quit --\r,
+#    "Done -- Hit any key to exit\r"
+
+en: More -- %2d%% -- Hit space for next screen, Enter for new line, 'Q' to quit --\r
+en: Done -- Hit any key to exit\r
+de: Mehr -- %2d%% -- Leertaste = Seite weiter, Enter = Zeile weiter, 'F' = Fertig --\r
+de: Fertig -- Eine Taste dr$(uu)cken...
+nl: !!nl
+nl: !!nl
+it: Altro -- %2d%% -- Spazio = continua, Enter = prossima linea, 'F' = fine --\r
+it: Fine -- Premere qualsiasi tasto per continuare\r
+pl: Jeszcze -- %2d%% -- Spacja - nast$(oe)pny ekran, Enter - nowa linia, 'K' - koniec --\r
+pl: Koniec -- Naci$(as)nij klawisz $(dz)eby zako$(an)czy$(ac)\n
+es: M$(aa)s -- %2d%% -- Espacio para otra pantalla, Enter para nueva l$(ai)nea, 'F' Fin --\r
+es: Acabado -- Pulsa cualquier tecla para salir
+ch: Mehr -- %2d%% -- Leertaschte = Site witer, Enter = Zile witer, 'F' = Fertig --\r
+ch: Fertig -- Taschte dr$(uu)cke...
+bv: Mehr -- %2d%% -- Leertast'n = Seit'n weider, Enter = Zeil'n weider,'F' = Fertig--\r
+bv: Fertig -- A Tasten drucka...
+
+%end messages
+
+#****************************************************************************
+#*																			*
+#*					Handling of Strings with Multiple Cases					*
+#*																			*
+#****************************************************************************
+
+# When HPACK handles collections of files, it has to be careful to get the
+# case right.  Some languages simply have a single and plural cases, but a
+# small number have more (Polish has a double case and Finnish has several
+# types of cases).  In order to handle this, the following construct is used:
+#
+# %begincase
+# %value <expression>
+# %return <string corresponding to expression>
+# ...
+# %default
+# %return <string for default case>
+# %endcase
+#
+# <expression> is a C expression which evaluates true if the given argument
+# (signified by the '$' operator) is of the correct value for the following
+# string.  For example the expression:
+#
+# %value ( ( $ < 10 || $ > 20 ) && ( ( $ % 10 ) >= 2 && ( $ % 10 ) <= 4 )
+#
+# tests for the Polish double case.
+#
+# For example in English which has the single and plural case, the following
+# would return "file" or "files" depending on the given argument:
+#
+# %begincase
+# %value ( $ == 1 )
+# %return "file"
+# %default
+# %return "files"
+# %endcase
+
+%begin specialcase
+
+# Singular "file", plural "files".
+en: %begincase
+en: %value ( $ == 1 )
+en: %return file
+en: %default
+en: %return files
+en: %endcase
+
+# Singular "Datei", plural "Dateien".
+de: %begincase
+de: %value ( $ == 1 )
+de: %return Datei
+de: %default
+de: %return Dateien
+de: %endcase
+
+# Singular "bestand", plural "bestanden".
+nl: %begincase
+nl: %value ( $ == 1 )
+nl: %return bestand
+nl: %default
+nl: %return bestanden
+nl: %endcase
+
+# All cases "file" (Italians do it better:-).
+it: %begincase
+it: %default
+it: %return file
+it: %endcase
+
+# Singular "plik", double case "pliki", plural "plikow".
+pl: %begincase
+pl: %value ( $ == 1 )
+pl: %return plik
+pl: %value ( ( $ < 10 || $ > 20 ) && ( ( $ % 10 ) >= 2 && ( $ % 10 ) <= 4 ) )
+pl: %return pliki
+pl: %default
+pl: %return plik$(so)w
+pl: %endcase
+
+# Singular "fichero", plural "ficheros".
+es: %begincase
+es: %value ( $ == 1 )
+es: %return fichero
+es: %default
+es: %return ficheros
+es: %endcase
+
+# Singular "!!ch", plural "!!ch".
+ch: %begincase
+ch: %value ( $ == 1 )
+ch: %return !!ch
+ch: %default
+ch: %return !!ch
+ch: %endcase
+
+# Singular "Datei", plural "Datei'n".
+bv: %begincase
+bv: %value ( $ == 1 )
+bv: %return Datei
+bv: %default
+bv: %return Datei'n
+bv: %endcase
+
+%end specialcase
+
+#****************************************************************************
+#*																			*
+#*					Special Text Strings used in Viewfile.C					*
+#*																			*
+#****************************************************************************
+
+%begin viewfile
+
+# HPACK uses a flexible viewfile format which merely contains the name of each
+# field Note that some of the fields have very narrow widths!  In addition, if
+# the text in the fields is less than the field widths, it may need to be
+# space-padded to be centered.  Finally, the 'Name' field needs a single
+# character of space padding to accomodate the single-character prefix code.
+# The actual field widths are:
+#
+#	System = 6 chars	Length = 7 chars	Size = 7 chars
+#	Ratio = 5 chars		Date = 8 chars		Time = 8 chars
+#	Name = variable
+#
+# With the default settings the display is:
+#
+# System  Length  Size   Ratio   Date     Time    Name
+# ------ ------- ------- ----- -------- --------  -----------
+#                              dd/mm/yy hh:mm:ss /sssssssssss...
+#  sssss ddddddd ddddddd  dd%  dd/mm/yy hh:mm:ss #sssssssssss...
+#		 ------- ------- -----					  -----------
+#		 ddddddd ddddddd  dd%			          Total: dddd files
+
+en: Name
+en:   Date
+en:   Time
+en:   Size
+en: Length
+en: System
+en: Ratio
+de: Name
+de:  Datum
+de:   Zeit
+de:  Gr$(uo)$(ss)e
+de:  L$(ua)nge
+de: System
+de: Ratio
+nl: Naam
+nl:  Datum
+nl:   Tijd
+nl: Groote
+nl: Lengte
+nl: Systeem
+nl: Ratio
+it: Nome
+it:   Data
+it:   Ora
+it:   Dim.
+it: Lungh.
+it: Sistema
+it: Prop.
+pl: Nazwa
+pl:   Data
+pl: Godzina
+pl: Rozmiar
+pl: D$(sl)ugo$(as)$(ac)
+pl: System
+pl: Stos.
+es: Nombre
+es:  Fecha
+es:   Hora
+es: Tama$(sn)o
+es:  Long.
+es: Sistema
+es: Ratio
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+ch: !!ch
+bv: Nama
+bv:  Datum
+bv:   Zaid
+bv:  Gr$(ua)ss
+bv:   Leng
+bv: System
+bv: Ratio
+
+# The total data summary lines.  These don't correspond to the actual data
+# fields since adapting for the variable fields in the directory data is
+# difficult.
+
+en: \nGrand total: %u archives, %u %s, overall compression ratio %u%%\n
+en: \t     %lu bytes compressed, %lu bytes uncompressed.\n
+de: \nInsgesamt: %u Archive, %u %s, gesamte Kompressionsrate %u%%\n
+de: \t   %lu Bytes komprimiert, %lu Bytes unkomprimiert.\n
+nl: \nGroote Totaal: %u archieven, %u %s, !!nl\n
+nl: \t       %lu !!nl
+it: \nGran Totale: %u archivi, %u %s, percentuale di compressione %u%%\n
+it: \t     %lu bytes compressi, %lu bytes non compressi.\n
+pl: \nCa$(sl)kowita suma: %u archiw$(so)w, %u %s ca$(sl)kowite upakowanie %u%%\n
+pl: \t     %lu bajt$(so)w spakowanych, %lu bajt$(so)w niespakowanych.\n
+es: \nSuma Total: %u archivos, %u %s, relaci$(ao)n global de compresi$(ao)n %u%%\n
+es: \t     %lu bytes comprimidos, %lu bytes sin comprimir.\n
+ch: !!ch
+ch: !!ch
+bv: \nInsgesamt: %u Archive, %u %s, !!bv\n
+bv: \t   %lu !!bv
+
+# The Level 2 directory format (currently unused).  This displays the full
+# information which may be present in the Level 2 HPACK format.  The simple
+# long format displays information in the directory block, the extra long
+# format displays all information present in the data blocks corresponding to
+# each directory block.
+#
+# Example of long format:
+#
+#   Size  Size as  Future Version Name
+#         stored    size
+# 172461  892456 -------       1 Mudwall Photographic Workshop V 1.0.1
+#
+# Creation            12/04/91 11:22:13  Effective                <None given>
+# Modification        15/04/91 15:46:12  Expiry                   <None given>
+# Read                27/09/92 20:07:43  Backup                 01/09/92 01:22:08
+# Attrib.Modification   <None given>
+#
+# Owner Actions       RWX..........      Creator ID          <None given>
+# Group Actions       RWX..........      Modifier ID         <None given>
+# World Actions       R-X..........      Read ID             <None given>
+# System Actions      .............      Attribute Mod.ID    <None given>
+#
+# Example of extra long format:
+#
+# Data block 1
+#   Data type      Normal (0)            Storage type         MBWA Compr.(1)
+#   ECC type       Reed-Solomon (1)      Format type          None (0)
+#   Crypt type     RSA-MDC (2)           Authentication type  SHS-DSS (2)
+
+# en:   Size  Size as  Future Version Name
+# en:         stored    size
+# en: xxxxxxx xxxxxxx xxxxxxx xxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# en:
+# en: Creation            xx/xx/xx xx:xx:xx  Effective              xx/xx/xx xx:xx:xx
+# en: Modification        xx/xx/xx xx:xx:xx  Expiry                 xx/xx/xx xx:xx:xx
+# en: Read                xx/xx/xx xx:xx:xx  Backup                 xx/xx/xx xx:xx:xx
+# en: Attrib.Modification xx/xx/xx xx:xx:xx
+# en:
+# en: Owner Actions       xxxxxxxxxxxxx      Creator ID          xxxxxxxxxxxxxxxxxxxx
+# en: Group Actions       xxxxxxxxxxxxx      Modifier ID         xxxxxxxxxxxxxxxxxxxx
+# en: World Actions       xxxxxxxxxxxxx      Read ID             xxxxxxxxxxxxxxxxxxxx
+# en: System Actions      xxxxxxxxxxxxx      Attribute Mod.ID    xxxxxxxxxxxxxxxxxxxx
+# en:
+# en: Data block xxxx
+# en:   Data type      xxxxxxxxxxxxxxxxxxxx  Storage type         xxxxxxxxxxxxxxxxxxx
+# en:   ECC type       xxxxxxxxxxxxxxxxxxxx  Format type          xxxxxxxxxxxxxxxxxxx
+# en:   Crypt type     xxxxxxxxxxxxxxxxxxxx  Authentication type  xxxxxxxxxxxxxxxxxxx
+
+# it: Dimen_  Dim.    Dim.    Versione Nome
+# it: sione   archiv. Futura
+# it: xxxxxxx xxxxxxx xxxxxxx xxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# it:
+# it: Creato              xx/xx/xx xx:xx:xx  Effettivo              xx/xx/xx xx:xx:xx
+# it: Modificato          xx/xx/xx xx:xx:xx  Scadenza               xx/xx/xx xx:xx:xx
+# it: Letto               xx/xx/xx xx:xx:xx  Backup                 xx/xx/xx xx:xx:xx
+# it: Attrib. Modificati  xx/xx/xx xx:xx:xx
+# it:
+# it: Attrib. propietario xxxxxxxxxxxxx      ID Creatore         xxxxxxxxxxxxxxxxxxxx
+# it: Attrib. gruppo      xxxxxxxxxxxxx      ID Modificatore     xxxxxxxxxxxxxxxxxxxx
+# it: Attrib. altri       xxxxxxxxxxxxx      ID Lettore          xxxxxxxxxxxxxxxxxxxx
+# it: Attrib. sistema     xxxxxxxxxxxxx      ID Mod. Attrib.     xxxxxxxxxxxxxxxxxxxx
+# it:
+# it: Blocco dati xxxx
+# it:   Tipo di dati   xxxxxxxxxxxxxxxxxxxx  Formato archiv.      xxxxxxxxxxxxxxxxxxx
+# it:   Tipo di ECC    xxxxxxxxxxxxxxxxxxxx  Tipo del formato     xxxxxxxxxxxxxxxxxxx
+# it:   Tipo di critt. xxxxxxxxxxxxxxxxxxxx  Tipo dell' autentica xxxxxxxxxxxxxxxxxxx
+
+# es: Tama$(sn)o  Tama$(sn)o  Tama$(sn)o  Versi$(ao)n Nombre
+# es:         Almac.  Futuro
+# es: xxxxxxx xxxxxxx xxxxxxx xxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# es:
+# es: Creaci$(ao)n            xx/xx/xx xx:xx:xx  Efectivo               xx/xx/xx xx:xx:xx
+# es: Modificaci$(ao)n        xx/xx/xx xx:xx:xx  Caduca                 xx/xx/xx xx:xx:xx
+# es: Le$(ai)do               xx/xx/xx xx:xx:xx  Backup                 xx/xx/xx xx:xx:xx
+# es: Modificaci$(ao)n Atrib. xx/xx/xx xx:xx:xx
+# es:
+# es: Atributos Propieta. xxxxxxxxxxxxx      ID Creador          xxxxxxxxxxxxxxxxxxxx
+# es: Atributos Grupo     xxxxxxxxxxxxx      ID Modificador      xxxxxxxxxxxxxxxxxxxx
+# es: Atributos Mundo     xxxxxxxxxxxxx      ID Lector           xxxxxxxxxxxxxxxxxxxx
+# es: Atributos Sistema   xxxxxxxxxxxxx      ID Modif. Atribut   xxxxxxxxxxxxxxxxxxxx
+# es:
+# es: Bloque de datos xxxx
+# es:   Tipo de Dato   xxxxxxxxxxxxxxxxxxxx  Tipo de Almacenaje   xxxxxxxxxxxxxxxxxxx
+# es:   Tipo de ECC    xxxxxxxxxxxxxxxxxxxx  Tipo de Formato      xxxxxxxxxxxxxxxxxxx
+# es:   Tipo de Encr.  xxxxxxxxxxxxxxxxxxxx  Tipo de Autentica.   xxxxxxxxxxxxxxxxxxx
+
+%end viewfile
+
+#****************************************************************************
+#*																			*
+#*								OS-Specific Messages						*
+#*																			*
+#****************************************************************************
+
+%begin os-specific
+
+# MSDOS-specific file error messages: "File sharing violation",
+#	"File locking violation", "File corresponds to device driver"
+%if __MSDOS__
+en: File sharing violation
+en: File locking violation
+en: File corresponds to device driver
+de: Dateinutzungssverletzung (share)
+de: Dateizugriffsverletzung (locking)
+de: Dateiname entspricht einem Ger$(ua)t
+nl: Bestand samendeling overschreden
+nl: Bestand toegang overschreden
+nl: Bestand naam is het zelfde als een apparaat naam
+it: File sharing violation
+it: File locking violation
+it: File corrisponde a device driver
+pl: Pogwa$(sl)cenie wsp$(so)$(sl)dzielenia plik$(so)w
+pl: Naruszenie lockingu plik$(so)w
+pl: Nazwa pliku pokrywa si$(oe) z nazw$(oa) driwera
+es: Error de compartic$(ao)n de fichero
+es: Error de bloqueo de fichero
+es: El fichero corresponde a un manejador de dispositivo
+ch: !!ch
+ch: !!ch
+ch: !!ch
+bv: Dateinutzungssverletzung (share)
+bv: Dateizugriffsverletzung (locking)
+bv: Dateinama entspricht an Ger$(ua)t
+%endif __MSDOS__
+
+%end os-specific
+
+#****************************************************************************
+#*																			*
+#*								HPACK Title Message							*
+#*																			*
+#****************************************************************************
+
+%begin title
+
+# The HPACK title message.  Note the different credits lines depending on
+# which port we are running:
+#	"HPACK - The multi-system archiver Version 0.78a0.  Release date: 1 Feb 1993"
+#	"For Amiga, Archimedes, Atari, Macintosh, MSDOS, OS/2, and UNIX"
+#	"Copyright (c) Peter Gutmann 1989 - 1993.  Amiga port by Nick, Joerg, and Peter."
+#	"Copyright (c) Peter Gutmann 1989 - 1993.  Arc port by Jason, Edouard and Peter."
+#	"Copyright (c) Peter Gutmann 1989 - 1993.  Atari port by Martin Braschler."
+#	"Copyright (c) Peter Gutmann 1989 - 1993.  Macintosh port by Peter Gutmann."
+#	"Copyright (c) Peter Gutmann 1989 - 1993.  OS/2 port John Burnell."
+#	"Copyright (c) Peter Gutmann 1989 - 1993.  Unix port by Stuart Woolford."
+#	"Copyright (c) Peter Gutmann 1989 - 1993.  xxxx port by yyyy zzzz."
+
+en: HPACK - The multi-system archiver Version 0.79a0.  Release date: 1 May 1993
+en: For Amiga, Archimedes, Atari, Macintosh, MSDOS, OS/2, and UNIX
+de: HPACK - Der multi-system Archivierer Version 0.79a0.  Freigabedatum: 1 Mai 1993
+de: F$(uu)r Amiga, Archimedes, Atari, Macintosh, MSDOS, OS/2, und UNIX
+nl: HPACK - Het multie-systeem archief programma V.0.79a0. Uitgevings dd:1 Mai 1993
+nl: Voor Amiga, Archimedes, Atari, Macintosh, MSDOS, OS/2, en UNIX
+it: HPACK - L' archiviatiore multi-sistema Versione 0.79a0.  Del: 1 Maggio 1993
+it: Per Amiga, Archimedes, Atari, Macintosh, MSDOS, OS/2 e UNIX
+pl: HPACK - Wielosystemowy program pakuj$(oa)cy, wersja 0.79a0 z 1 maja 1993
+pl: Dla Amigi, Archimedesa, Atari, Macintosha, MSDOS, OS/2 i UNIX-a.
+es: HPACK - El archivador multi-sistema Version 0.79a0.  Del: 1 Mayo 1993
+es: Para Amiga, Archimedes, Atari, Macintosh, MSDOS, OS/2 y UNIX
+ch: !!ch
+ch: !!ch
+bv: HPACK - Da multi-system Archivierer Version 0.79a0.  Freigabedatum: 1 Mai 1993
+bv: Fia Amiga, Archimedes, Atari, Macintosh, MSDOS, OS/2, und UNIX
+%if __AMIGA__
+en: Copyright (c) Peter Gutmann 1989 - 1993.  Amiga port by Nick, Joerg, & Peter.
+de: Copyright (c) Peter Gutmann 1989 - 1993.  Amiga-Port von Nick, Joerg, u.Peter.
+nl: Copyright (c) Peter Gutmann 1989 - 1993.  Amiga port door Nick, Joerg, & Peter.
+it: Copyright (c) Peter Gutmann 1989 - 1993.  Amiga port di Nick, Joerg, & Peter.
+pl: Copyright (c) Peter Gutmann 1989 - 1993.  Wersja na Amig$(oe): Nick, Joerg & Peter.
+es: Copyright (c) Peter Gutmann 1989-1993.  Portado a Amiga por di Nick,Joerg,Peter.
+ch: !!ch
+bv: Copyright (c) Peter Gutmann 1989 - 1993.  Amiga-Port von N.Little u.P.Gutmann.
+%elif __ARC__
+en: Copyright (c) Peter Gutmann 1989 - 1993.  Arc port by Jason, Edouard, & Peter.
+de: Copyright (c) Peter Gutmann 1989 - 1993.  Arc-Port von Jason, Edouard u.Peter.
+nl: Copyright (c) Peter Gutmann 1989 - 1993.  Arc port door Jason, Edouard & Peter.
+it: Copyright (c) Peter Gutmann 1989 - 1993.  Arc port di Jason, Edouard & Peter.
+pl: Copyright (c) Peter Gutmann 1989 - 1993.  Wersja Arc: Jason, Edouard & Peter.
+es: Copyright (c) Peter Gutmann 1989 - 1993.  Portado a Arc por Jason,Edouard, Peter
+ch: !!ch
+bv: Copyright (c) Peter Gutmann 1989 - 1993.  Arc-Port von Jason, Edouard u.Peter.
+%elif __ATARI__
+en: Copyright (c) Peter Gutmann 1989 - 1993.  Atari ST/TT port by Martin Braschler.
+de: Copyright (c) Peter Gutmann 1989 - 1993.  Atari-ST/TT-Port von Martin Braschler
+nl: Copyright (c) Peter Gutmann 1989 - 1993.  AtariST/TT port door Martin Braschler
+it: Copyright (c) Peter Gutmann 1989 - 1993.  Atari ST/TT port di Martin Braschler.
+pl: Copyright (c) Peter Gutmann 1989 - 1993.  Wersja na Atari: Martin Braschler.
+es: Copyright (c) Peter Gutmann 1989 - 1993.  Portado a Atari ST/TT por M. Braschler.
+ch: !!ch
+bv: Copyright (c) Peter Gutmann 1989 - 1993.  Atari-ST/TT-Port von Martin Braschler
+%elif __MAC__
+en: Copyright (c) Peter Gutmann 1989 - 1993.  Macintosh port by Peter Gutmann.
+de: Copyright (c) Peter Gutmann 1989 - 1993.  Mac-Portierung von Peter Gutmann.
+nl: Copyright (c) Peter Gutmann 1989 - 1993.  Macintosh port door Peter Gutmann.
+it: Copyright (c) Peter Gutmann 1989 - 1993.  Macintosh port di Peter Gutmann.
+pl: Copyright (c) Peter Gutmann 1989 - 1993.  Wersja na Macintosha: Peter Gutmann.
+es: Copyright (c) Peter Gutmann 1989 - 1993.  Portado a Macintosh por Peter Gutmann.
+ch: !!ch
+bv: Copyright (c) Peter Gutmann 1989 - 1993.  Mac-Portierung von Peter Gutmann.
+%elif __MSDOS__
+en: Copyright (c) Peter Gutmann 1989 - 1993.  Shareware version.
+de: Copyright (c) Peter Gutmanm 1989 - 1993.  Shareware-Version.
+nl: Copyright (c) Peter Gutmann 1989 - 1993.  Shareware version.
+it: Copyright (c) Peter Gutmann 1989 - 1993.  Shareware version.
+pl: Copyright (c) Peter Gutmann 1989 - 1993.  Wersja shareware.
+es: Copyright (c) Peter Gutmann 1989 - 1993.  Versi$(ao)n Shareware.
+ch: !!ch
+bv: Copyright (c) Peter Gutmanm 1989 - 1993.  Shareware-Version.
+%elif __OS2__
+en: Copyright (c) Peter Gutmann 1989 - 1993.  OS/2 port by John Burnell.
+de: Copyright (c) Peter Gutmanm 1989 - 1993.  OS/2-Portierung von John Burnell.
+nl: Copyright (c) Peter Gutmann 1989 - 1993.  OS/2 port door John Burnell.
+it: Copyright (c) Peter Gutmann 1989 - 1993.  OS/2 port di John Burnell.
+pl: Copyright (c) Peter Gutmann 1989 - 1993.  Wersja na OS/2: John Burnell.
+es: Copyright (c) Peter Gutmann 1989 - 1993.  Portado a OS/2 por John Burnell.
+ch: !!ch
+bv: Copyright (c) Peter Gutmanm 1989 - 1993.  OS/2-Portierung von John Burnell.
+%elif __UNIX__
+en: Copyright (c) Peter Gutmann 1989 - 1993.  Unix port by Stuart Woolford.
+de: Copyright (c) Peter Gutmann 1989 - 1993.  UNIX-Portierung von Stuart Woolford.
+nl: Copyright (c) Peter Gutmann 1989 - 1993.  Unix port door Stuart Woolford.
+it: Copyright (c) Peter Gutmann 1989 - 1993.  Unix port di Stuart Woolford.
+pl: Copyright (c) Peter Gutmann 1989 - 1993.  Wersja na Unix: Stuart Woolford.
+es: Copyright (c) Peter Gutmann 1989 - 1993.  Portado a Unix por Stuart Woolford.
+ch: !!ch
+bv: Copyright (c) Peter Gutmann 1989 - 1993.  UNIX-Portierung von Stuart Woolford.
+%else
+en: Copyright (c) Peter Gutmann 1989 - 1993.  xxxx port by yyyy zzzz.
+de: Copyright (c) Peter Gutmann 1989 - 1993.  xxxx-Portierung von yyyy zzzz.
+nl: Copyright (c) Peter Gutmann 1989 - 1993.  xxxx port door yyyy zzzz.
+it: Copyright (c) Peter Gutmann 1989 - 1993.  xxxx port di yyyy zzzz.
+pl: Copyright (c) Peter Gutmann 1989 - 1993.  Wersja na xxxx: yyyy zzzz.
+es: Copyright (c) Peter Gutmann 1989 - 1993.  Portado a xxxx por yyyy zzzz.
+ch: !!ch
+bv: Copyright (c) Peter Gutmann 1989 - 1993.  xxxx-Portierung von yyyy zzzz.
+%endif Various OS-dependant credits
+
+%end title
+
+#****************************************************************************
+#*																			*
+#*								HPACK Help Screens							*
+#*																			*
+#****************************************************************************
+
+# The following messages are the online condensed manual for HPACK - there can
+# be an arbitrarily large amount of help information presented here although
+# really it should be on the order of only a screenful or two for brevity's
+# sake.
+
+%begin helpmessage
+
+# The HPACK help message.  Note the different translate options depending
+# on which OS we are running under.  The option letters can't be translated
+# (for example the 'A,N,S,P' for overwrite options) don't make sense in a
+# non-English language.  They have been left as the English letters since
+# otherwise they would have to be changed for every language used (ie HPACK
+# would have completely different command letters in each version).  Similarly
+# the language names are left in English, since we can't tell which language
+# we're supposed to interpret them in until we've already interpreted them.
+# In addition the LANGUAGE and CHARSET options should be all-lowercase, since
+# the handling of environment variables is case-sensitive, and it saves
+# people having to guess how to capitalize NeXTsTeP.
+
+#	"Usage: HPACK command [options] archive [data files...][@scriptfiles... ]"
+#	""
+#	"Valid HPACK commands are:"
+#	""
+#	" A - Add files                     X - Extract files"
+#	" V - Directory of files            P - Display files to output"
+#	" D - Delete files                  F - Freshen files in archive"
+#	" R - Replace files                 U - Update files"
+#	" T - Test archive integrity"
+#	""
+#	"Valid HPACK options are:"
+#	""
+#	" -0  - Store files without compression"
+#	" -A  - Store/restore file attributes"
+#	" -B<path> - Specify base path for files"
+#	" -Cx - Encryption options (conventional and public-key encryption):"
+#	"     -C  - Use conventional-key encryption"
+#	"     -CA - Conventional-key-encrypt entire archive"
+#	"     -CI - Conventional-key-encrypt individual files"
+#	"     -CS - Conventional-key-encrypt with secondary password"
+#	"     -CPA<userID> - Public-key encrypt entire archive files for <userID>"
+#	"     -CPI<userID> - Public-key encrypt individual files for <userID>"
+#	"     -CPS<userID> - Public-key encrypt with secondary key for <userID>"
+#	" -Dx - Directory options:"
+#	"     -DA - Store/extract all directories (even empty ones)"
+#	"     -DC - Create only immediate containing directory for files"
+#	"     -DN - Do not create empty directories"
+#	" -E  - Add/use error recovery information"
+#	" -F  - Force file move into/out of an archive"
+#	" -I  - Interactive mode (prompt for all actions)"
+#	" -K  - Overwrite existing archive"
+#	" -Lx - Security options (data authentication):"
+#	"     -L<userID>  - Secure archive with data from <userID>"
+#	"     -LI<userID> - Secure individual files with data from <userID>"
+#	" -M  - Create multipart archive"
+#	" -Ox - Overwrite on extraction options:"
+#	"     -OA - Overwrite all existing files"
+#	"     -ON - Overwrite no existing files"
+#	"     -OP - Prompt for new name to extract as"
+#	"     -OS - Smart overwrite - change filename to eliminate conflict"
+#	" -R  - Recurse through subdirectories"
+#	" -S  - Stealth mode (suppress output)"
+#	" -T  - Touch files on extraction (set date to current date)"
+#	" -U  - Unit compression mode"
+#	" -Vx - View directory options:"
+#	"     -VD - View information on matching directories only"
+#	"     -VF - View information on matching files only"
+#	" -W  - Treat files as archive comments"
+#	" -Xx - Text file translation options:"
+#	"     -X  - Smart translation - type is determined automatically"
+#	"     -XC - Translate with CRLF as line-end marker"
+#	"     -XE - Translate from EBCDIC"
+#	"     -XL - Translate with linefeed as line-end marker"
+#	"     -XR - Translate with carriage return as line-end marker"
+#	"     -XP - Translate from Prime pseudo-ASCII"
+#	"	  -XXnn - Translate with hex constant nn as line-end marker"
+#	" -Zx - Extended options (system-specific): see HPACK.DOC"
+#	""
+#	"Valid extended options (see also documentation) are:"
+#	""
+#	" +devcheck  - Check for device name conflict"
+#	" +invert    - Invert filename extension into directory"
+#	" +lower     - Force file and directory names to lowercase"
+#	" +noext     - Don't force '.HPK' extension"
+#	" +noumask   - Override umask variable setting"
+#	" +rsz       - Generate RSX-11 style file and directory names"
+#	" +select <SQL command>  - Apply SQL 'select' command"
+#	" +type={type-assoc}     - Associate file type with filename extension"
+#	""
+#	"Environment variables used by HPACK are:"
+#	""
+#	" PEMPATH  - Path to PEM/RIPEM public/private key files"
+#	" PGPPATH  - Path to PGP public/private key files"
+#	" HPACKPATH- Path to HPACK configuration files"
+#	" LANGUAGE - Language for HPACK to use (bavarian, dutch, english, german"
+#	"            italian, polish, spanish, swiss)"
+#	" CHARSET  - Character set for HPACK to use (ascii, cp850, cp869, ibmpc,"
+#	"            iso8859-1, iso8859-2, iso8859-3, iso8859-4, macintosh,"
+#	"            mazovia, nextstep, ebcdic)"
+#	""
+#	""archive" is the HPACK archive, with a default extension of .HPK"
+#	""data files" are the files to archive, defaulting to all files if none are"
+#	"             given.  Wildcards *, ?, [], ^/!, \ can be used."
+
+en: Usage: HPACK command [options] archive [data files...][@scriptfiles... ]
+en:
+en: Valid HPACK commands are:
+en:
+en:  A - Add files                     X - Extract files
+en:  V - Directory of files            P - Display files to output
+en:  D - Delete files                  F - Freshen files in archive
+en:  R - Replace files                 U - Update files
+en:  T - Test archive integrity
+en:
+en: Valid HPACK options are:
+en:
+en:  -0  - Store files without compression
+en:  -A  - Store/restore file attributes
+en:  -B<path> - Specify base path for files
+en:  -Cx - Encryption options (conventional and public-key encryption):
+en:      -C  - Use conventional-key encryption
+en:      -CA - Conventional-key-encrypt entire archive
+en:      -CI - Conventional-key-encrypt individual files
+en:      -CS - Conventional-key-encrypt with secondary password
+en:      -CPA<userID> - Public-key encrypt entire archive files for <userID>
+en:      -CPI<userID> - Public-key encrypt individual files for <userID>
+en:      -CPS<userID> - Public-key encrypt with secondary key for <userID>
+en:  -Dx - Directory options:
+en:      -DA - Store/extract all directories (even empty ones)
+en:      -DC - Create only immediate containing directory for files
+en:      -DN - Do not create empty directories
+en:  -E  - Add/use error recovery information
+en:  -F  - Force file move into/out of an archive
+en:  -I  - Interactive mode (prompt for all actions)
+en:  -K  - Overwrite existing archive
+en:  -Lx - Security options (data authentication):
+en:      -L<userID>  - Secure archive with data from <userID>
+en:      -LI<userID> - Secure individual files with data from <userID>
+en:  -M  - Create multipart archive
+en:  -Ox - Overwrite on extraction options:
+en:      -OA - Overwrite all existing files
+en:      -ON - Overwrite no existing files
+en:      -OP - Prompt for new name to extract as
+en:      -OS - Smart overwrite - change filename to eliminate conflict
+en:  -R  - Recurse through subdirectories
+en:  -S  - Stealth mode (suppress output)
+en:  -T  - Touch files on extraction (set date to current date)
+en:  -U  - Unit compression mode
+en:  -Vx - View directory options:
+en:      -VD - View information on matching directories only
+en:      -VF - View information on matching files only
+en:  -W  - Treat files as archive comments
+en:  -Xx - Text file translation options:
+en:      -X  - Smart translation - type is determined automatically
+%if __AMIGA__ || __ARC__ || __MAC__ || __UNIX__
+en:      -XC - Translate with CRLF as line-end marker
+%endif __AMIGA__ || __ARC__ || __MAC__ || __UNIX__
+en:      -XE - Translate from EBCDIC
+%if __ATARI__ || __MAC__ || __MSDOS__ || __OS2__
+en:      -XL - Translate with linefeed as line-end marker
+%endif __ATARI__ || __MAC__ || __MSDOS__ || __OS2__
+%if __AMIGA__ || __ATARI__ || __ARC__ || __MSDOS__ || __OS2__ || __UNIX__
+en:      -XR - Translate with carriage return as line-end marker
+%endif __AMIGA__ || __ ATARI__ || __ARC__ || __MSDOS__ || __OS2__ || __UNIX__
+en:      -XP - Translate from Prime pseudo-ASCII
+en:      -XXnn - Translate with hex constant nn as line-end marker
+en:
+en: Valid extended options (see also documentation) are:
+en:
+%if __MSDOS__
+en:  +devcheck  - Check for device name conflict
+%endif __MSDOS__
+%if __ARC__
+en:  +invert    - Invert filename extension into directory
+%endif __ARC__
+%if __AMIGA__ || __ARC__ || __OS2__ || __MAC__ || __UNIX__
+en:  +lower     - Force file and directory names to lowercase
+%endif __AMIGA__ || __ARC__ || __OS2__ || __MAC__ || __UNIX__
+en:  +noext     - Don't force '.HPK' extension
+%if __UNIX__
+en:  +noumask   - Override umask variable setting
+%endif __UNIX__
+%if __VMS__
+en:  +rsz       - Generate RSX-11 style file and directory names
+%endif __VMS__
+en:  +select <SQL command>  - Apply SQL 'select' command
+%if __ARC__ || __MAC__
+en:  +type={type-assoc}     - Associate file type with filename extension
+%endif __ARC__ || __MAC__
+en:
+en: Environment variables used by HPACK are:
+en:
+en:  PEMPATH  - Path to PEM/RIPEM public/private key files
+en:  PGPPATH  - Path to PGP public/private key files
+en:  HPACKPATH- Path to HPACK configuration files
+en:  LANGUAGE - Language for HPACK to use (bavarian, dutch, english, german,
+en:             italian, polish, spanish, swiss)
+en:  CHARSET  - Character set for HPACK to use (ascii, cp850, cp869, ibmpc,
+en:             iso8859-1, iso8859-2, iso8859-3, iso8859-4, macintosh,
+en:             mazovia, nextstep, ebcdic)
+en:
+en: "archive" is the HPACK archive, with a default extension of .HPK
+en: "data files" are the files to archive, defaulting to all files if none are
+en:              given.  Wildcards *, ?, [], ^/!, \ can be used.
+
+de: Anwendung: HPACK Kommando [Optionen] Archiv [Dateien..] [Stapeldateien..]
+de:
+de: M$(uo)gliche HPACK Kommandos sind:
+de:
+de: A - Dateien hinzuf$(uu)gen             X - Dateien entpacken
+de: V - Verzeichnis der Dateien        P - Dateien anzeigen
+de: D - Dateien l$(uo)schen                F - Dateien auffrischen
+de: R - Dateien ersetzen               U - Archiv erneuern
+de: T - Teste Archiv
+de:
+de: M$(uo)gliche HPACK Optionen sind:
+de:
+de:  -0  - Dateien ungepackt speichern
+de:  -A  - Attribute der Dateien speichern/wiederherstellen
+de:  -B<Pfad> - Grundpfad f$(uu)r die Dateien w$(ua)hlen
+de:  -Cx - Verschl$(uu)sselungsoptionen (konventionell und mit $(uo)fftl. Schl$(uu)ssel):
+de:      -C  - Benutze konventionelle Verschl$(uu)sselung
+de:      -CA - Ganzes Archiv konventionell verschl$(uu)sseln
+de:      -CI - Einzelne Dateien konventionell verschl$(uu)sseln
+de:      -CS - Konventionelle Verschl$(uu)sselung mit zweitem Passwort
+de:      -CPA<Benutzer ID> - $(uO)ff. Schl$(uu)ssel f$(uu)r ganzes Archiv mit <Benutzer ID>
+de:      -CPI<Benutzer ID> - $(uO)ff. Schl$(uu)ssel f$(uu)r einzelne Dateien mit <Benutzer ID>
+de:      -CPS<Benutzer ID> - $(uO)ff. Schl$(uu)ssel mit 2. Schl$(uu)ssel f$(uu)r <Benutzer ID>
+de:  -Dx - Verzeichnis Optionen:
+de:      -DA - Speichere/erzeuge alle Verzeichnisse (auch die leeren)
+de:      -DC - Erzeuge nur das erste enthaltene Verzeichnis f$(uu)r die Dateien
+de:      -DN - Erzeuge keine leeren Verzeichnisse
+de:  -E  - Erzeuge/benutze Information zur Fehlerbehebung
+de:  -F  - Erzwinge ein Verschieben ins/aus dem Archiv
+de:  -I  - Interaktiver Modus (frage bei allen Aktionen)
+de:  -K  - $(uU)berschreibe bereits existierende Archive
+de:  -Lx - Sicherheitsoptionen (Datenauthenzit$(ua)t)
+de:      -L<Benutzer ID>  - Sichere Archiv mit den Daten von <Benutzer ID>
+de:      -LI<Benutzer ID> - Sichere einzelne Dateien mit Daten von <Benutzer ID>
+de:  -M  - Erzeuge Archiv in mehreren Teilen
+de:  -Ox - Optionen f$(uu)r $(uU)berschreiben w$(ua)hrend dem Entpacken:
+de:      -OA - $(uU)berschreibt alle Dateien
+de:      -ON - $(uU)berschreibt keine bereits vorhandenen Dateien
+de:      -OP - Fragt nach einem neuen Namen um zu Entpacken
+de:      -OS - Intelligentes $(uU)berschreiben - $(ua)ndert Namen zur Konfliktvermeidung
+de:  -R  - Durchsuche Verzeichnisse rekursiv
+de:  -S  - Tarnmodus (alle Ausgaben unterdr$(uu)ckt)
+de:  -T  - Setze aktuelles Datum w$(ua)hrend dem Entpacken
+de:  -U  - Modus f$(uu)r einheitliches Komprimieren
+de:  -Vx - Optionen f$(uu)rs Anzeigen von Verzeichnissen
+de:      -VD - Zeige nur Information $(uu)ber benutzte Verzeichnisse
+de:      -VF - Zeige nur Information $(uu)ber benutzte Dateien
+de:  -W  - Behandle die Dateien als Kommentare f$(uu)rs Archiv
+de:  -Xx - Optionen zur Text$(uu)bersetzung:
+de:      -X - Intelligente $(uU)bersetzung - Typ wird automatisch ermittelt
+%if __AMIGA__ || __ARC__ || __MAC__ || __UNIX__
+de:      -XC - $(uU)bersetze mit CRLF als Zeilenende
+%endif
+de:      -XE - $(uU)bersetze von EBCDIC
+%if __ATARI__ || __MAC__ || __MSDOS__ || __OS2__
+de:      -XL - $(uU)bersetze mit LF als Zeilenende
+%endif
+%if __AMIGA__ || __ATARI__ || __ARC__ || __MSDOS__ || __OS2__ || __UNIX__
+de:      -XR - $(uU)bersetze mit CR als Zeilenende
+%endif
+de:      -XP - $(uU)bersetze von Prime Pseudo-ASCII
+de:      -XXnn - $(uU)bersetze mit Hexadezimal-Konstante als Zeilenende
+de:
+de: G$(uu)ltige erweiterte Optionen (siehe auch Handbuch) sind:
+de:
+%if __MSDOS__
+de: +devcheck  - Pr$(uu)fe auf Ger$(ua)tetreiber konflikt
+%endif __MSDOS__
+%if __ARC__
+de: +invert    - Wandle Dateinamenserweiterung in Verzeichnisse um
+%endif __ARC__
+%if __AMIGA__ || __ARC__ || __OS2__ || __MAC__ || __UNIX__
+de: +lower     - Konvertiere alle Datei- und Verzeichnisnamen in Kleinbuchstaben
+%endif __AMIGA__ || __ARC__ || __OS2__ || __MAC__ || __UNIX__
+de: +noext     - F$(uu)ge nicht die Erweiterung '.HPK' hinzu
+%if __UNIX__
+de: +noumask   - $(uU)berreite umask-Variableneinstellung nicht
+%endif __UNIX__
+%if __VMS__
+de: +rsz       - Erzeuge RSX-11-artige Datei- und Verzeichnisnamen
+%endif __VMS__
+de: +select <SQL command>  - Wende den SQL 'select'-Befehl an
+%if __ARC__ || __MAC__
+de: +type={type-assoc}     - Verbinde Dateityp mit der Dateinamenserweiterung
+%endif __ARC__ || __MAC__
+de:
+de: Von HPACK benutzte Umgebungsvariablen:
+de:
+de:  PEMPATH  - Pfad zu den PEM/RIPEM $(uo)ff. Schl$(uu)ssel-Dateien
+de:  PGPPATH  - Pfad zu den PGP $(uo)ff. Schl$(uu)ssel-Dateien
+de:  HPACKPATH- Pfad zu den HPACK Konfigurationsdateien
+de:  LANGUAGE - Von HPACK benutzte Sprache (bavarian, dutch, english, german,
+de:             italian, polish, spanish, swiss)
+de:  CHARSET  - Von HPACK benutzter Zeichensatz (ascii, cp850, cp869, ibmpc,
+de:             iso8859-1, iso8859-2, iso8859-3, iso8859-4, macintosh,
+de:             mazovia, nextstep, ebcdic)
+de:
+de: "Archiv" ist das HPACK-Archiv, mit Standardendung .HPK
+de: "Dateien" sind die zu behandelnden Dateien; fehlt die Angabe, so bedeutet
+de:           das alle Dateien. Ersatzzeichen *, ?, [], ^/!, \ sind erlaubt.
+
+nl: Gebruik: HPACK kommando [opties] archief [informat.best...][@script best... ]
+nl:
+nl: Valiede HPACK kommandos zijn:
+nl:
+nl:  A - Bestanden toevoegen           X - Bestanden extracteren
+nl:  V - Pad van de bestanden          P - Bestanden bekijken
+nl:  D - Bestanden verwijderen         F - Bestanden in het archif verversen
+nl:  R - Bestanden verplaatsen         U - Bestanden bijwerken
+nl:  T - Test archif integriteit
+nl:
+nl: Geldige HPACK opties zijn:
+nl:
+nl:  -K - Bestaande archief overschrijven  -T - Bestanden aanraken op extractie
+nl:  -R - Recursief werken door padden     -F - Forceer verplaatsen van bestand
+nl:  -S - Stille zetting (geen informatie) -A - Opslaan van bestand atributen
+nl:  -I - Interactieve zetting             -L - Authenticitatie informat. bijvoegen
+nl:  -W - Archief komentaar bijvoegen      -E - Fout verwerkings informat.bijvoegen
+nl:  -U - Eenheid kompressie zetting       -C<*> - Encryptie opties: zie HPACK.DOC
+nl:  -B<path>  - Geef basis pad            -D<*> - Pad opties: zie HPACK.DOC
+nl:  -V<F,D,S> - Zie opties(Best,Padden,Sort) -Z<*> - Sys-spec.opties:zie HPACK.DOC
+nl:  -O<N,A,S,P>       - Overschrijf opties (Geen, Alles, Slim, Vraag eerst)
+%if __ATARI__ || __MSDOS__ || __OS2__
+nl:  -X<R,Xxx,L,E,P,A> - vertaal opties (slim, CR, Hexadec., LF,EBCDIC,Prime,ASCII)
+%elif __MAC__
+nl:  -X<C,Xxx,L,E,P,A> - vertaal opties (slim, CRLF,Hexadec.,LF,EBCDIC,Prime,ASCII)
+%elif __AMIGA__ || __ARC__ || __UNIX__
+nl:  -X<R,Xxx,C,E,P,A> - vertaal opties (slim, CR,Hexadec.,CRLF,EBCDIC,Prime,ASCII)
+%endif Various OS-specific defines
+nl:
+nl: "archief" is het HPACK archief, met een standaard extensie van .HPK
+nl: "informatie bestanden" zijn de te archieverende bastanden, alle bestanden als
+nl:     geen gespecificeerd. Algemene karakters *,?, [], ^/!, \ kunnen gebruikt worden.
+
+it: Uso: HPACK comandi [opzioni] archivio [file dati...][@file_di_comandi... ]
+it:
+it: Comandi riconosciuti da HPACK:
+it:
+it:  A - Aggiungi file                 X - Estrai file
+it:  V - Lista dei file                P - Display files to output
+it:  D - Cancella file                 F - Rinfresca file in archivio
+it:  R - Rimpiazza file                U - Aggiorna file in archivio
+it:  T - Controlla integrit$(ga) dell' archivio
+it:
+it: Opzioni riconosciute da HPACK:
+it:
+it:  -0  - Archivia senza compressione
+it:  -A  - Salva/Ripristina attributi dei file
+it:  -B<path> - Seleziona directory di base per i file
+it:  -Cx - Opzioni di crittografia (convenzionale ed a chiave pubblica):
+it:      -C  - Usa crittografia a chiave convenzionale
+it:      -CA - Usa crittografia convenzionale sull' intero archivio
+it:      -CI - Usa crittografia convenzionale su file individuali
+it:      -CS - Usa crittografia convenzionale con chiave secondaria
+it:      -CPA<userID> - Usa critt. a chiave pubblica sull' archivio per <userID>
+it:      -CPI<userID> - Usa critt. a chiave pubblica sui singoli file per <userID>
+it:      -CPS<userID> - Usa critt. a chiave pubb. con chiave secondaria per <userID>
+it:  -Dx - Opzioni Directory:
+it:      -DA - Salva/Estrai tutte le directories (anche se vuote)
+it:      -DC - Crea solo l' ultima directory contenente i file
+it:      -DN - Non crare le directory vuote
+it:  -E  - Aggiungi/Usa informazioni per la correzione degli errori
+it:  -F  - Forza spostamento del file nell'/dall' archivio
+it:  -I  - Interattivo (conferma tutte le operazioni)
+it:  -K  - Sovrascrivi l' archivio esistente
+it:  -Lx - Opzioni sicurezza (autenticazione dei dati):
+it:      -L<userID>  - Autentica l' archivio con dati provenienti da <userID>
+it:      -LI<userID> - Autentica file individuali provenienti da <userID>
+it:  -M  - Crea un' archivio a pi$(gu) parti
+it:  -Ox - Opzioni sovrascrittura durante estrazione dei file:
+it:      -OA - Sovrascrivi tutti i file pre-esistenti
+it:      -ON - Impedisci sovrascrittura di file pre-esitenti
+it:      -OP - Richiedi nuovo nome da utilizzare per l' estrazione
+it:      -OS - Sovrascrittura intelligente - modifica nome automaticamente
+it:  -R  - Visita tutte le subdirectory
+it:  -S  - Output silenzioso (Sopprime tutto l' output)
+it:  -T  - Modifica data estraendo (file tutti in data odierna)
+it:  -U  - Compressione per unit$(ga)
+it:  -Vx - Opzioni per la visualizzazione delle directory:
+it:      -VD - Visualizza informazione solo su directory selezionate
+it:      -VF - Visualizza informazione solo su file selezionati
+it:  -W  - Utilizza i file come commenti all' archivio
+it:  -Xx - Opzioni traduzione testo:
+it:      -X  - Traduzione intelligente - riconoscimento automatico del formato
+%if __AMIGA__ || __ARC__ || __MAC__ || __UNIX__
+it:      -XC - Traduci utilizzando CRLF come fine-linea
+%endif __AMIGA__ || __ARC__ || __MAC__ || __UNIX__
+it:      -XE - Traduci dall' EBCDIC
+%if __ATARI__ || __MAC__ || __MSDOS__ || __OS2__
+it:      -XL - Traduci utilizzando LF come fine-linea
+%endif __ATARI__ || __MAC__ || __MSDOS__ || __OS2__
+%if __AMIGA__ || __ATARI__ || __ARC__ || __MSDOS__ || __OS2__ || __UNIX__
+it:      -XR - Traduci utilizzando CR come fine-linea
+%endif __AMIGA__ || __ ATARI__ || __ARC__ || __MSDOS__ || __OS2__ || __UNIX__
+it:      -XP - Traduci da pseudo-ASCII della Prime
+it:      -XXnn - Traduci utilizzando costante esadecimale nn come fine-linea
+it:
+it: Opzioni estese riconosciute (vedi documentazione) sono:
+it:
+%if __MSDOS__
+it:  +devcheck  - Controlla conflitto nel nome dei device
+%endif __MSDOS__
+%if __ARC__
+it:  +invert    - Converti file extension in nome di directory
+%endif __ARC__
+%if __AMIGA__ || __ARC__ || __OS2__ || __MAC__ || __UNIX__
+it:  +lower     - Forza il minuscolo nei nomi di file e directory
+%endif __AMIGA__ || __ARC__ || __OS2__ || __MAC__ || __UNIX__
+it: !!it +noext     - Don't force '.HPK' extension
+%if __UNIX__
+it:  +noumask   - Ignora il valore della variabile umask
+%endif __UNIX__
+%if __VMS__
+it:  +rsz       - Genera nomi di file e directory secondo lo stile RSX-11
+%endif __VMS__
+it:  +select <SQL command>  - Esegui il comando 'select' dell' SQL
+%if __ARC__ || __MAC__
+it:  +type={type-assoc}     - Associa il tipo di file con la file extension
+%endif __ARC__ || __MAC__
+it:
+it: Variabili di sistema utilizzate da HPACK sono:
+it:
+it:  PEMPATH  - Path per i file di chiavi pubbliche/private PEM/RIPEM
+it:  PGPPATH  - Path per i file di chiavi pubbliche/private di PGP
+it:  HPACKPATH- Path per il file di configurazione di HPACK
+it:  LANGUAGE - Lingua da utilizzare (bavarian, dutch, english, german, ITALIAN,
+it:             polish, spanish, swiss)
+it:  CHARSET  - Set di caratteri da utilizzare (ascii, cp850, cp869, ibmpc,
+it:             iso8859-1, iso8859-2, iso8859-3, iso8859-4, macintosh,
+it:             mazovia, nextstep, ebcdic)
+it:
+it: "archivio" $(ge) l' archivio HPACK, con una file extension .HPK
+it: "data files" are the files to archive, defaulting to all files if none are
+it:              given.  Wildcards *, ?, [], ^/!, \ can be used.
+it: "file dati" sono i file da archiviare, default tutti i file in mancanza di
+it:             nomi. I caratteri speciali (wildcards) *, ?, []. ^/!, \ possono
+it:             essere utilizzati
+
+pl: U$(dz)ycie: HPACK komenda [opcje] archiwum [pliki...][@skrypty... ]
+pl:
+pl: Komendy HPACK-a:
+pl:
+pl:  A - dodanie plik$(so)w                X - rozpakowanie plik$(so)w
+pl:  V - zawarto$(as)$(ac) archiwum            P - ogl$(oa)danie plik$(so)w
+pl;  D - kasowanie plik$(so)w              F - od$(as)wie$(dz)anie plik$(so)w archiwum
+pl:  R - wymiana plik$(so)w                U - aktualizacja plik$(so)w
+pl:  T - sprawdzenie sp$(so)jno$(as)ci archiwum
+pl:
+pl: Opcje HPACK-a:
+pl:
+pl:  -0  - dopisanie pliku bez kompresji
+pl:  -A  - zapisanie/odtworzenie atrybut$(so)w plik$(so)w
+pl:  -B<$(as)cie$(dz)ka> - wska$(dz) scie$(dz)k$(oe) plik$(so)w
+pl:  -Cx - Opcje kodowania (kluczem konwencjonalnym i publicznym)
+pl:      -C  - kodowanie kluczem konwencjonalnym
+pl:      -CA - kodowanie kluczem konwencjonalnym ca$(sl)ego archiwum
+pl:      -CI - kodowanie kluczem konwencjonalnym poszczeg$(so)lnych plik$(so)w
+pl:      -CS - kodowanie kluczem konwencjonalnym z drugim has$(sl)em
+pl:      -CPA<userID> - kodowanie ca$(sl)ego archiwum kluczem publicznym
+pl:                     u$(dz)ytkownika <userID>
+pl:      -CPI<userID> - kodowanie poszczeg$(so)lnych plik$(so)w kluczem
+pl:                     publicznym u$(dz)ytkownika <userID>
+pl:      -CPS<userID> - kodowanie kluczem publicznym z drugim has$(sl)em
+pl:                     u$(dz)ytkownika <userID>
+pl:  -Dx - Opcje katalog$(so)w
+pl:      -DA - Zapisywanie/odtwarzanie wszystkich katalog$(so)w (nawet pustych)
+pl:      -DC - Odtworzenie tylko pierwszego katalogu (?)
+pl:      -DN - Bez odtwarzania pustych katalog$(so)w
+pl:  -E  - Dodanie/u$(dz)ycie informacji pozwalaj$(oa)cych poprawia$(ac) b$(sl)$(oe)dy
+pl:  -F  - Wymuszenie wpisania plik$(so)w do archiwum/katalogu
+pl:  -I  - Tryb interakcyjny (pytanie o wszystkie polecenia)
+pl:  -K  - Zamazanie istniej$(oa)cego archiwum
+pl:  -Lx - Opcje bezpiecze$(an)stwa (autentyczno$(as)$(ac) danych)
+pl:      -L<userID>  - Zabezpieczone archiwum z danymi od u$(dz)ytkownika
+pl:                    <userID>
+pl:      -LI<userID> - Zabezpieczone poszczeg$(so)lne pliki z danymi od
+pl:                    u$(dz)ytkownika <userID>
+pl:  -M  - Utworzenie archiwum wielocz$(oe)$(as)ciowego
+pl:  -Ox - Opcje zamazywania w trakcie rozpakowywania:
+pl:      -OA - Zamazanie wszystkich istniej$(oa)cych plik$(so)w
+pl:      -ON - Bez zamazywania istniej$(oa)cych plik$(so)w
+pl:      -OP - Pytanie o now$(oa) nazw$(oe), pod kt$(so)r$(oa) b$(oe)dzie zapisany plik
+pl:      -OS - M$(oa)dre zamazywanie - zmiana nazwy dla unikni$(oe)cia konfliktu
+pl:  -R  - Rekurencyjne przetwarzanie katalog$(so)w
+pl:  -S  - Tryb ukryty (bez komunikat$(so)w)
+pl:  -T  - Ustawienie dat plik$(so)w jako bie$(dz)$(oa)cych
+pl:  -U  - Tryb kompresji ca$(sl)o$(as)ciowej
+pl:  -Vx - Opcje ogl$(oa)dania katalog$(so)w:
+pl:      -VD - Pokazanie tylko pasuj$(oa)cych katalog$(so)w
+pl:      -VF - Pokazanie tylko pasuj$(oa)cych plik$(so)w
+pl:  -W  - Traktowanie plik$(so)w jak komentarzy do archiwum
+pl:  -Xx - Opcje translacji plik$(so)w tekstowych:
+pl:      -X  - M$(oa)dra translacja - typ wyznaczany automatycznie
+%if __AMIGA__ || __ARC__ || __MAC__ || __UNIX__
+pl:      -XC - Translacja CRLF na znak ko$(an)ca pliku
+%endif __AMIGA__ || __ARC__ || __MAC__ || __UNIX__
+pl:      -XE - Translacja z EBCDIC
+%if __ATARI__ || __MAC__ || __MSDOS__ || __OS2__
+pl:      -XL - Translacja LF na znak ko$(an)ca pliku
+%endif __ATARI__ || __MAC__ || __MSDOS__ || __OS2__
+%if __AMIGA__ || __ATARI__ || __ARC__ || __MSDOS__ || __OS2__ || __UNIX__
+pl:      -XR - Translacja CR na znak ko$(an)ca pliku
+%endif __AMIGA__ || __ ATARI__ || __ARC__ || __MSDOS__ || __OS2__ || __UNIX__
+pl:      -XP - Translacja z pseudo-ASCII Prime
+pl:      -XXnn - Translacja sta$(sl)ej szestanskowej nn jako znaku ko$(an)ca pliku
+pl:
+pl: Opcje rozszerzone (patrz tez dokumentacja):
+pl:
+%if __MSDOS__
+pl:  +devcheck  - Sprawdzanie konfliktu nazw urz$(oa)dze$(an) zewn$(oe)trznych
+%endif __MSDOS__
+%if __ARC__
+pl:  +invert    - Zamiana rozszerzenia pliku na katalog (?)
+%endif __ARC__
+%if __AMIGA__ || __ARC__ || __OS2__ || __MAC__ || __UNIX__
+pl:  +lower     - Wymuszenie zapisu nazw katalog$(so)w i plik$(so)w ma$(sl)ymi literami
+%endif __AMIGA__ || __ARC__ || __OS2__ || __MAC__ || __UNIX__
+%if __UNIX__
+pl:  +noumask   - Nie u$(dz)ywanie ustawionej warto$(as)ci umask
+%endif __UNIX__
+%if __VMS__
+pl:  +rsz       - Utworzenie nazw katalog$(so)w i plik$(so)w w stylu RSX-11
+%endif __VMS__
+pl:  +select <komenda SQL> - U$(dz)ycie komendy 'select' SQL
+%if __ARC__ || __MAC__
+pl:  +type={type-assoc}    - Przyporz$(oa)dkowanie typu pliku rozszerzeniu
+%endif __ARC__ || __MAC__
+pl:
+pl: Zmienne $(as)rodowiskowe u$(dz)ywane przez HPACK:
+pl:
+pl:  PEMPATH  - $(aS)cie$(dz)ka do kluczy publicznych/prywatnych PEM/RIPE
+pl:  PGPPATH  - $(aS)cie$(dz)ka do kluczy publicznych/prywatnych PGP
+pl:  HPACKPATH- $(aS)cie$(dz)ka do plik$(so)w konfiguracyjnych HPACK-a
+pl:  LANGUAGE - U$(dz)ywany j$(oe)zyk (bavarian, dutch, english, german,
+pl:             italian, polish, spanish, swiss)
+pl:  CHARSET  - Zestaw znak$(so)w u$(dz)ywany prze HPACK-a (ascii, cp850,
+pl:             cp869, ibmpc, iso8859-1, iso8859-2, iso8859-3, iso8859-4,
+pl:             macintosh, mazovia, nextstep, ebcdic)
+pl:
+pl: "archiwum" to archiwum HPACK-a ze standardow$(oa) ko$(an)c$(so)wk$(oa) .HPK
+pl: "pliki" to pliki archiwowane - wszystkie je$(dz)eli $(dz)aden nie jest
+pl:         wymieniony. Mo$(dz)na u$(dz)ywa$(ac) wildcards *, ?, [], ^/!, \.
+
+
+
+es: Uso: HPACK orden [opciones] archivo [ficheros...][@Fichero_de_$(ao)rdenes...]
+es:
+es: Las $(ao)rdenes v$(aa)lidas para HPACK son:
+es:
+es:  A - A$(sn)adir ficheros               X - Extraer ficheros
+es:  V - Directorio de ficheros        P - Muestra ficheros Display por salida
+es:  D - Borrar ficheros               F - Refrescar ficheros en archivo
+es:  R - Reemplazar ficheros           U - Actualizar ficheros
+es:  T - Comprobar integridad del archivo
+es:
+es: Las opciones v$(aa)lidas de HPACK son:
+es:
+es:  -0  - Almacena ficheros sin compresi$(ao)n
+es:  -A  - Almacena/Recupera atributos de ficheros
+es:  -B<camino> - Especifica camino base para ficheros
+es:  -Cx - Opciones de Encriptado (convencional y de llave p$(au)blica):
+es:      -C  - Encriptar con clave convencional
+es:      -CA - Encriptar con clave convencional el archivo completo
+es:      -CI - Encriptar con clave convencional los ficheros individuales
+es:      -CS - Encriptar con clave convencional y clave secundaria
+es:      -CPA<userID> - Encriptar con llave p$(au)blica arch. completo a <userID>
+es:      -CPI<userID> - Encriptar con llave p$(au)blica fich. individuales a <userID>
+es:      -CPS<userID> - Encriptar con llave p$(au)blica y clave secundaria a <userID>
+es:  -Dx - Opciones de directorio:
+es:      -DA - Almacenar/Recuperar todos los directorios (incluidos los vac$(ai)os)
+es:      -DC - Crear $(au)nicamente $(au)ltimo directorio con ficheros
+es:      -DN - No crear directorios vac$(ai)os
+es:  -E  - A$(sn)adir/Usar informaci$(ao)n para correcci$(ao)n de errores
+es:  -F  - Obligar a mover ficheros dentro/fuera de un archivo
+es:  -I  - Modo interactivo (pregunta todas las opciones)
+es:  -K  - Sobreescribe archivo existente
+es:  -Lx - Opciones de seguridad(autenticaci$(ao)n de datos):
+es:      -L<userID>  - Autentica archivo con datos de <userID>
+es:      -LI<userID> - Autentica ficheros individuales con datos de <userID>
+es:  -M  - Crear archivo multiparte
+es:  -Ox - Opciones para sobreescribir al extraer:
+es:      -OA - Sobreescribir todos los ficheros existentes
+es:      -ON - Sobreescribir ficheros no existentes
+es:      -OP - Preguntar nuevo nombre
+es:      -OS - Sobreescribir Inteligente - cambia nombre de fichero
+es:  -R  - Recorre los subdirectorios
+es:  -S  - Modo invisible (suprimir mensajes)
+es:  -T  - Tocar ficheros al extraer (actualiza fecha a la actual)
+es   -U  - Modo de compresi$(ao)n Unitario
+es:  -Vx - Opciones para ver directorio:
+es:      -VD - Ver informaci$(ao)n s$(ao)lo en directorios coincidentes
+es:      -VF - Ver informaci$(ao)n s$(ao)lo en ficheros coincidentes
+es:  -W  - Tratar los ficheros como comentarios de archivo
+es:  -Xx - Opciones para traducci$(ao)n de ficheros de texto:
+es:      -X  - Traducci$(ao)n inteligente - El tipo se determina autom$(aa)ticamente
+%if __AMIGA__ || __ARC__ || __MAC__ || __UNIX__
+es:      -XC - Traducir con CRLF como marca de final de l$(ai)nea
+%endif __AMIGA__ || __ARC__ || __MAC__ || __UNIX__
+es:      -XE - Traducir desde EBCDIC
+%if __ATARI__ || __MAC__ || __MSDOS__ || __OS2__
+es:      -XL - Traducir con LF como marca de final de l$(ai)nea
+%endif __ATARI__ || __MAC__ || __MSDOS__ || __OS2__
+%if __AMIGA__ || __ATARI__ || __ARC__ || __MSDOS__ || __OS2__ || __UNIX__
+es:      -XR - Traducir con CR como marca de final de l$(ai)nea
+%endif __AMIGA__ || __ ATARI__ || __ARC__ || __MSDOS__ || __OS2__ || __UNIX__
+es:      -XP - Traducir desde el pseudo-ASCII de Prime
+es:      -XXnn - Traducir con la constante hex nn como marca de final de l$(ai)nea
+es:
+es: Las opciones extendidas v$(aa)lidas (ver tambi$(ae)n documentaci$(ao)n) son:
+es:
+%if __MSDOS__
+es:  +devcheck  - Comprueba conflicto en nombre de dispositivo
+%endif __MSDOS__
+%if __ARC__
+es:  +invert    - Invierte extensi$(ao)n de fichero en el directorio
+%endif __ARC__
+%if __AMIGA__ || __ARC__ || __OS2__ || __MAC__ || __UNIX__
+es:  +lower     - Fuerza nombres de fichero y directorio a min$(au)sculas
+%endif __AMIGA__ || __ARC__ || __OS2__ || __MAC__ || __UNIX__
+es:  +noext     - No forzar extensi$(ao)n '.HPK'
+%if __UNIX__
+es:  +noumask   - Ignora valor de la variable umask
+%endif __UNIX__
+%if __VMS__
+es:  +rsz       - Genera nombres de fichero y directorio en estilo RSX-11
+%endif __VMS__
+es:  +select <SQL command>  - Aplica comando SQL 'select'
+%if __ARC__ || __MAC__
+es:  +type={type-assoc}     - Asocia tipo de fichero con extensi$(ao)n
+%endif __ARC__ || __MAC__
+es:
+es: Las variables de entorno empleadas por HPACK son:
+es:
+es:  PEMPATH  - Camino a los ficheros de llaves p$(au)blicas/secretas de PEM/RIPEM
+es:  PGPPATH  - Camino a los ficheros de llaves p$(au)blicas/secretas de PGP
+es:  HPACKPATH- Camino a ficheros de configuraci$(ao)n de HPACK
+es:  LANGUAGE - Lenguaje a emplear por HPACK (bavarian, dutch, english, german,
+es:             italian, polish, spanish, swiss)
+es:  CHARSET  - Juego de caracteres a emplear por HPACK (ascii, cp850, cp869,
+es:             ibmpc, iso8859-1, iso8859-2, iso8859-3, iso8859-4, macintosh,
+es:             mazovia, nextstep, ebcdic)
+es:
+es: "archivo" es el archivo HPACK , con una extensi$(ao)n por defecto de .HPK
+es: "ficheros" son los ficheros a archivar, tomando por defecto todos si no se
+es:            da ninguno, se pueden usar los comodines *, ?, [], ^/!, \
+
+ch: Awendig: HPACK Kommando [Optione] Archiv [Dateie..] [Schtapeldateie..]
+ch:
+ch: M$(uo)glichi HPACK Kommandos sind:
+ch:
+ch:  A - Dateie dezuf$(uu)ge               X - Dateie entpacke
+ch:  V - Verzeichnis vo de Dateie      P - Dateie azeige
+ch:  D - Dateie l$(uo)sche                 F - Dateie uffr$(uu)sche
+ch:  R - Dateie ersetze                U - Archiv erneuere
+ch:  T - Tescht s'Archiv
+ch:
+ch: M$(uo)glichi HPACK Optione sind:
+ch:
+ch:  -0  - Dateie unpackt schpeichere
+ch:  -A  - Attribut vo de Dateie schpeichere/wiederherstelle
+ch:  -B<Pfad> - Grundpfad f$(uu)r d'Dateie w$(ua)hle
+ch:  -Cx - Verschl$(uu)sseligsoptione (konventionell und mit $(uo)ff. Schl$(uu)ssel)
+ch:      -C  - Benutz d'konventionelli Verschl$(uu)sselig
+ch:      -CA - S'ganze Archiv konventionell verschl$(uu)ssle
+ch:      -CI - Einzelni Dateie konventionell verschl$(uu)ssle
+ch:      -CS - Konventionelli Verschl$(uu)sslig mit zweitem Passwort
+ch:      -CPA<Benutzer ID> - $(uo)ff. Schl$(uu)ssel f$(uu)r s'ganz Archiv mit <Benutzer ID>
+ch:      -CPI<Benutzer ID> - $(uo)ff. Schl$(uu)ssel f$(uu)r einzelni Dateie mit <Benutzer ID>
+ch:      -CPS<Benutzer ID> - $(uo)ff. Schl$(uu)ssel mit 2. Schl$(uu)ssel f$(uu)r <Benutzer ID>
+ch:  -Dx - Verzeichnis Optione
+ch:      -DA - Schpeicher/erz$(uu)g alli Verzeichnis (au die leere)
+ch:      -DC - Erz$(uu)g nur s'erschti enthaltigne Verzeichnis f$(uu)r d'Dateie
+ch:      -DN - Erz$(uu)g kei leeri Verzeichnis
+ch:  -E  - Erz$(uu)g/ben$(uu)tz Informatione zur F$(ua)hlerbehebig
+ch:  -F  - Erzwing e Verschiebe ins/us em Archiv
+ch:  -I  - Interaktive Modus (frog bi alle Aktione)
+ch:  -K  - $(uU)berschrib bereits existierendi Archiv
+ch:  -Lx - Sicherheitsoptione (Dateauthenzit$(ua)t)
+ch:      -L<Benutzer ID>  - Sichere Archiv mit de Date vo <Benutzer ID>
+ch:      -LI<Benutzer ID> - Sichere einzelni Dateie mit Date vo <Benutzer ID>
+ch:  -M  - Erz$(uu)g es Archiv us mehrere Teil
+ch:  -Ox - Optione f$(uu)r's $(uU)berschribe w$(ua)hrend em Entpacke:
+ch:      -OA - $(uU)berschribt alli Dateie
+ch:      -ON - $(uU)berschribt alli bereits vorhandigne Dateie
+ch:      -OP - Frogt nach em ne neue Name zum Entpacke
+ch:      -OS - Intelligents $(uU)berschribe - $(ua)nderet de Name zum Konfliktvermide
+ch:  -R  - Durchsuch d'Verzeichnis rekursiv
+ch:  -S  - Tarnmodus (alli Uch:obe unterdr$(uu)ckt)
+ch:  -T  - Setz s'aktuelle Datum w$(ua)hrend em Entpacke
+ch:  -U  - Modus f$(uu)r d's einheitliche Komprimiere
+ch:  -Vx - Optione f$(uu)rs Azeige vo Verzeichnis
+ch:      -VD - Zeig nur d'Informatione $(uu)ber benutzti Verzeichnis
+ch:      -VF - Zeig nur d'Informatione $(uu)ber benutzti Dateie
+ch:  -W  - Behandle d'Dateie wie Komment$(ua)r f$(uu)rs Archiv
+ch:  -Xx - Optione f$(uu)r d'Text$(uu)bersetzig:
+ch:      -X - Intellig$(ua)nti $(uU)bersetzig - de Typ wird automatisch beschtimmt
+%if __AMIGA__ || __ARC__ || __MAC__ || __UNIX__
+ch:      -XC - $(uU)bersetz mit CRLF als Zile$(ua)ndi
+%endif
+ch:      -XE - $(uU)bersetz vo EBCDIC
+%if __ATARI__ || __MAC__ || __MSDOS__ || __OS2__
+ch:      -XL - $(uU)bersetz mit LF als Zile$(ua)ndi
+%endif
+%if __AMIGA__ || __ATARI__ || __ARC__ || __MSDOS__ || __OS2__ || __UNIX__
+ch:      -XR - $(uU)bersetz mit CR als Zile$(ua)ndi
+%endif
+ch:      -XP - $(uU)bersetz vo Prime Pseudo-ASCII
+ch:      -XXnn - $(uu)bersetz mit Hexadezimal-Konschtante als Zile$(ua)ndi
+ch:
+ch: !!ch Valid extended options (see also documentation) are:
+ch:
+%if __MSDOS__
+ch: !!ch +devcheck  - Check for device name conflict
+%endif __MSDOS__
+%if __ARC__
+ch: !!ch +invert    - Invert filename extension into directory
+%endif __ARC__
+%if __AMIGA__ || __ARC__ || __OS2__ || __MAC__ || __UNIX__
+ch: !!ch +lower     - Force file and directory names to lowercase
+%endif __AMIGA__ || __ARC__ || __OS2__ || __MAC__ || __UNIX__
+ch: !!ch +noext     - Don't force '.HPK' extension
+%if __UNIX__
+ch: !!ch +noumask   - Override umask variable setting
+%endif __UNIX__
+%if __VMS__
+ch: !!ch +rsz       - Generate RSX-11 style file and directory names
+%endif __VMS__
+ch: !!ch +select <SQL command>  - Apply SQL 'select' command
+%if __ARC__ || __MAC__
+ch: !!ch +type={type-assoc}     - Associate file type with filename extension
+%endif __ARC__ || __MAC__
+ch:
+ch: Vo HPACK benutzti Umg$(ua)bigsvariable:
+ch:
+ch:  PEMPATH  - Pfad zu de PEM/RIPEM $(uo)ff. Schl$(uu)ssel-Dateie
+ch:  PGPPATH  - Pfad zu de PGP $(uo)ff. Schl$(uu)ssel-Dateie
+ch:  HPACKPATH- Pfad zu de HPACK !!ch<<configuration>> Dateie
+ch:  LANGUAGE - Vo HPACK benutzti Sproch (bavarian, dutch, english, german,
+ch:             italian, polish, spanish, swiss)
+ch:  CHARSET  - Vo HPACK benutzte Zeichesatz (ascii, cp850, cp869, ibmpc,
+ch:             iso8859-1, iso8859-2, iso8859-3, iso8859-4, macintosh, mazovia
+ch:             nextstep, ebcdic)
+ch:
+ch: "Archiv" ischs Archiv, mit ere Schtandard$(ua)ndig vo .HPK
+ch: "Dateie" sind d'ze behandelndi Dateie; f$(ua)hlt d'Agob, so bed$(uu)tet das
+ch:          alli Dateie. Ersatzzeiche *, ?, [], ^/!, \ sind erlaubt
+
+bv: Anwendung: HPACK Kommando [Optiona] Archiv [Datei'n..] [Stapidatei'n..]
+bv:
+bv: M$(uo)gliche HPACK Kommandos san:
+bv:
+bv:  A - Dateien dazuadoa              X - Dateien entpacka
+bv:  V - Verzeichnis der Dateien       P - Dateien ozoang
+bv:  D - Dateien l$(uo)schen               F - Dateien auffrischen
+bv:  R - Dateien ersetzen              U - Archiv erneuern
+bv:  T - Test s'Archiv
+bv:
+bv: M$(uo)gliche HPACK Optionen san:
+bv:
+bv:  -0  - Dateien ungepackt speichern
+bv:  -A  - Attribute der Dateien speichern/wiederherstain
+bv:  -B<Pfad> - Grundpfad fia d'Dateien wain
+bv:  -Cx - Verschlisselungsoptionen (konventionell und mit $(uo)fftl. Schlissel):
+bv:      -C  - Konventionelle Verschlisselung
+bv:      -CA - Ganz' Archiv konventionell verschlisseln
+bv:      -CI - Oazaine Dateien konventionell verschlisseln
+bv:      -CS - Konventionelle Verschlisselung mit zwoaden Passwort
+bv:      -CPA<Benutzer ID> - $(uO)ff. Schlissel fia ganz' Archiv mit <Benutzer ID>
+bv:      -CPI<Benutzer ID> - $(uO)ff. Schlissel fia oazaine Dateien mit <Benutzer ID>
+bv:      -CPS<Benutzer ID> - $(uO)ff. Schlissel mit 2. Schlissel fia <Benutzer ID>
+bv:  -Dx - Verzeichnis Optionen:
+bv:      -DA - Speicher/erzaig olle Verzeichnisse (aa de leer'n)
+bv:      -DC - Erzaig grod des erste enthoit'ne Verzeichnis fia de Dateien
+bv:      -DN - Erzaig koane leer'n Verzeichnisse
+bv:  -E  - Erzaig/benutze Information zur F$(ua)llabehebung
+bv:  -F  - Erzwinge a Verschiam von da Datei ins/aussem Archiv
+bv:  -I  - Interaktiver Modus (frog bei olle Aktionen)
+bv:  -K  - $(uU)wwaschreib existiernde Archive
+bv:  -Lx - Sicherheitsoptionen (Datenauthenzit$(ua)t)
+bv:      -L<Benutzer ID>  - Sicher Archiv mit den Daten von <Benutzer ID>
+bv:      -LI<Benutzer ID> - Sicher oazaine Dateien mit Daten von <Benutzer ID>
+bv:  -M  - Erzaig Archiv in mehrere Teile
+bv:  -Ox - Optionen fia's $(uU)wwaschreim w$(ua)hrent'm Entpacken:
+bv:      -OA - $(uU)berschreibt olle Dateien
+bv:      -ON - $(uU)berschreibt koane existierende Dateien
+bv:      -OP - Frogt noch an nai'n Nama zum Entpacken
+bv:      -OS - Intelligents $(uU)wwaschreim - $(ua)ndert'n Nama zur Konfliktvermeidung
+bv:  -R  - Durchsuache Verzeichnisse rekursiv
+bv:  -S  - Tarnmodus (alle Ausgaben wern undadruckt)
+bv:  -T  - Setze aktuelles Datum w$(ua)hrend'm Entpacken
+bv:  -U  - Modus fia einheitlichs Komprimieren
+bv:  -Vx - Optionen fias Ozoang von Verzeichnissen
+bv:      -VD - Zoag grod Information $(uu)wwa benutzte Verzeichnisse
+bv:      -VF - Zoag grod Information $(uu)wwa benutzte Dateien
+bv:  -W  - Behandle Dateien ois Kommentare fias Archiv
+bv:  -Xx - Optionen zur Text$(uu)wwasetzung:
+bv:      -X - Intelligente $(uU)wwasetzung - Typ werd automatisch festg'schtaid
+%if __AMIGA__ || __ARC__ || __MAC__ || __UNIX__
+bv:      -XC - $(uU)wwasetz' mid CRLF ois Zeil'nende
+%endif
+bv:      -XE - $(uU)wwasetz' von EBCDIC
+%if __ATARI__ || __MAC__ || __MSDOS__ || __OS2__
+bv:      -XL - $(uU)wwasetz' mid LF ois Zeil'nende
+%endif
+%if __AMIGA__ || __ATARI__ || __ARC__ || __MSDOS__ || __OS2__ || __UNIX__
+bv:      -XR - $(uU)wwasetz' mid CR ois Zeil'nende
+%endif
+bv:      -XP - $(uU)wwasetz' von Prime Pseudo-ASCII
+bv:      -XXnn - $(uU)wwasetz' mid Hexadezimal-Konstante ois Zeil'nende
+bv:
+bv: G$(uu)ltige erweiterte Optionen (im Handbuach st$(ua)d mehr) san:
+bv:
+%if __MSDOS__
+bv: +devcheck  - Pr$(uu)f auf Ger$(ua)tetreiber konflikt
+%endif __MSDOS__
+%if __ARC__
+bv: +invert    - Wandle Dateinamenserweiterung in Verzeichnisse um
+%endif __ARC__
+%if __AMIGA__ || __ARC__ || __OS2__ || __MAC__ || __UNIX__
+bv: +lower     - Konvertier oi Datei- und Verzeichnisnamen in Kloabuchstam umm
+%endif __AMIGA__ || __ARC__ || __OS2__ || __MAC__ || __UNIX__
+bv: +noext     - F$(uu)g koa '.HPK'-Erweiterung dazua
+%if __UNIX__
+bv: +noumask   - $(uU)berreit' umask-Variableneinstellung ned
+%endif __UNIX__
+%if __VMS__
+bv: +rsz       - Erzaig RSX-11-artige Datei- und Verzeichnisnamen
+%endif __VMS__
+bv: +select <SQL command>  - Wend' den SQL 'select'-Befehl o
+%if __ARC__ || __MAC__
+bv: +type={type-assoc}     - Verbind' Dateityp mit der Dateinamenserweiterung
+%endif __ARC__ || __MAC__
+bv:
+bv: Von HPACK herg'nommane Umgebungsvariablen:
+bv:
+bv:  PEMPATH  - Pfad zu den PEM/RIPEM $(uo)ff. Schlissel-Dateien
+bv:  PGPPATH  - Pfad zu den PGP $(uo)ff. Schlissel-Dateien
+bv:  HPACKPATH- Pfad zu den HPACK Konfigurazionsdateien
+bv:  LANGUAGE - Von HPACK herg'nommane Sprach (dutch, english, german, italian,
+bv:             polish, spanish, swiss)
+bv:  CHARSET  - Von HPACK herg'nommana Zeichensatz (ascii, cp850, cp869, ibmpc,
+bv:             iso8859-1, iso8859-2, iso8859-3, iso8859-4, macintosh,
+bv:             mazovia, nextstep, ebcdic)
+bv:
+bv: "Archiv" is's HPACK-Archiv, mit Standardendung .HPK
+bv: "Dateien" san d'Dateien; faid d'Angabe, so hoasst des olle Dateien.
+bv:           Ersatzzeichen *, ?, [], ^/!, \ san erlaubt.
+
+%end helpmessage
+
+#****************************************************************************
+#*																			*
+#*								Responses to Prompts						*
+#*																			*
+#****************************************************************************
+
+%begin useroption
+
+# Single-character responses 'Yes', 'No', 'All', 'Quit' (German: Ja, Nein,
+# Alle, Fertig; French: Oui, Non, Tout?, !!fr; Spanish: Si, No, Todos, Fin;
+# Dutch: Ja, Nee, Alles, !!nl; Italian: Si, No, Tutti, Fine; Polish: Tak, Nie,
+# Wszystkie, Koniec).
+#  (eg "Extract file [yes/no/all files]").  These characters are never
+#  displayed but are entered by the user in response to various prompts.
+
+en: Y
+en: N
+en: A
+en: Q
+de: J
+de: N
+de: A
+de: F
+nl: J
+nl: N
+nl: A
+nl: !!nl
+it: S
+it: N
+it: T
+it: F
+pl: T
+pl: N
+pl: W
+pl: K
+es: S
+es: N
+es: T
+es: F
+ch: J
+ch: N
+ch: A
+ch: F
+bv: J
+bv: N
+bv: A
+bv: F
+fr: O
+fr: N
+fr: T
+fr: !!fr
+
+%end useroption
+
+%endtext

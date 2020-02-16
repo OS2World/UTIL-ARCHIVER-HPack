@@ -1,0 +1,32 @@
+                         Ideas for HPACK Extensions
+                         ==========================
+
+                     HPAKIDEA.TXT  Updated 06 Jul 1991
+            "It's beautiful!  It'll bring tears to your eyes!"
+
+  The following ideas have been proposed as extensions for the basic HPACK
+archiver:
+
+ - Have a device driver which makes an HPACK archive seem like a filesystem.
+   
+ - Have an HPACK daemon which works like a spooler daemon.  Each person has
+   in their $HOME a directory called .hpack.  The daemon regularly checks this
+   directory and adds/freshens any files it finds in it to some predetermined
+   archive.  Thus when working on a project it is possible to keep continuous
+   backups of current work.  This idea may be rendered somewhat obsolete by
+   tools like SCCS.
+   
+ - A dead archive resurrector.  Currently it is possible to resurrect archives
+   which have been created with the -e option by hand.  A program to do this
+   automagically would be interesting, but probably not too useful:  If the
+   archive directory (which constitutes a very small portion of the total
+   archive) has been zapped then chances are the data (which makes up the bulk
+   of the archive) has been zapped as well.
+   
+ - An idea from Stu (the King of the Pipeline Stalls):  Create a version of 
+   HPACK which compresses everything into memory and then executes an illegal
+   instruction.  This creates an HPACK archive called "core".  This is very
+   versatile, since all you need to do is load the file into adb (the program
+   cavemen used to debug fire), patch it, and keep running it in extract mode.
+   This makes it possible to extract HPACK archives without a copy  of HPACK.
+   (BTW this is the person who thinks the only useful command in UNIX is "dd").

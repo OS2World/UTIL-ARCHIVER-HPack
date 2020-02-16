@@ -1,0 +1,166 @@
+#$Header$
+# Copyright (C) 1993 Jörg Plate
+
+EXE		= HPack
+STMP	= STmp/
+#GST	= HPack.gst
+#SCOPT	= SCOptions_N
+
+OBJECTS = $(STMP)arcdir.o $(STMP)arcdirio.o $(STMP)archive.o $(STMP)cli.o \
+$(STMP)display.o $(STMP)error.o $(STMP)fastio.o $(STMP)stream.o \
+$(STMP)filesys.o $(STMP)frontend.o $(STMP)language.o $(STMP)script.o \
+$(STMP)sql.o $(STMP)tags.o $(STMP)viewfile.o $(STMP)wildcard.o $(STMP)asn1.o \
+$(STMP)memmgr.o $(STMP)pemcode.o $(STMP)pemparse.o $(STMP)crc16.o \
+$(STMP)crypt.o $(STMP)keymgmt.o $(STMP)md5.o $(STMP)mdc.o $(STMP)rsa.o \
+$(STMP)shs.o $(STMP)amiga.o $(STMP)lza.o $(STMP)model.o $(STMP)model2.o \
+$(STMP)model3.o $(STMP)model4.o $(STMP)pack.o $(STMP)unpack.o $(STMP)store.o
+
+.c.o:
+	sc objname $(STMP)$>.o $*.c
+	-xpack method nuke.100 $(STMP)$>.o
+	-delete :kan/$>.q :kan/$>.s :kan/$>.o :kan/$>.q.00
+
+#all:  $(GST) $(EXE)
+all:	$(EXE) mktext
+
+mktext:	$(STMP)mktext.o
+	sc link $(STMP)mktext.o to mktext
+
+$(STMP)mktext.o:	mktext.c defs.h
+
+debug:
+	copy SCOptions_D SCOptions
+	smake all
+
+plain:
+	copy SCOptions_N SCOptions
+	smake all
+
+clean:
+#	-delete quiet $(STMP)*.o $(EXE) $(GST) temp_smk.tmp
+	-delete quiet $(STMP)*.o $(EXE) temp_smk.tmp mktext
+#	-gst $(GST) unload
+
+#$(GST):	.h .h
+#	-copy $(SCOPT) SCOptions
+#	-gst $(GST) unload
+#	sc noobjname mgst $(GST) .c
+#	-gst $(GST)
+
+love:
+	@echo "Nicht wahr?"
+	@echo
+
+$(STMP)arcdir.o:	arcdir.c arcdir.h defs.h error.h filehdr.h flags.h hpacklib.h sql.h \
+system.h tags.h asn1/asn1.h io/fastio.h
+
+$(STMP)arcdirio.o:	arcdirio.c arcdir.h filehdr.h choice.h defs.h error.h hpacklib.h \
+flags.h system.h asn1/asn1.h crc/crc16.h crypt/crypt.h io/fastio.h io/hpackio.h \
+store/store.h
+
+$(STMP)archive.o:	archive.c arcdir.h filehdr.h choice.h defs.h error.h filesys.h flags.h \
+frontend.h hpacklib.h system.h tags.h asn1/asn1.h crypt/crypt.h io/fastio.h \
+io/hpackio.h store/store.h
+
+$(STMP)cli.o:	cli.c arcdir.h choice.h defs.h error.h filehdr.h filesys.h flags.h \
+frontend.h hpacklib.h script.h sql.h system.h wildcard.h asn1/asn1.h \
+crypt/crypt.h io/fastio.h language/language.h
+
+$(STMP)error.o:	error.c arcdir.h defs.h filehdr.h error.h flags.h frontend.h \
+hpacklib.h system.h asn1/asn1.h crypt/crypt.h io/fastio.h io/hpackio.h \
+store/store.h
+
+$(STMP)filesys.o:	filesys.c arcdir.h defs.h error.h filehdr.h filesys.h flags.h \
+frontend.h hpacklib.h system.h tags.h asn1/asn1.h io/fastio.h io/hpackio.h
+
+$(STMP)frontend.o:	frontend.c arcdir.h filehdr.h choice.h defs.h error.h filesys.h \
+flags.h frontend.h hpacklib.h system.h tags.h wildcard.h asn1/asn1.h \
+crypt/crypt.h io/fastio.h io/hpackio.h store/store.h
+
+$(STMP)script.o:	script.c arcdir.h choice.h defs.h error.h filehdr.h filesys.h flags.h \
+frontend.h hpacklib.h script.h sql.h system.h wildcard.h asn1/asn1.h \
+io/fastio.h io/hpackio.h language/language.h
+
+$(STMP)sql.o:	sql.c arcdir.h defs.h filehdr.h flags.h frontend.h hpacklib.h script.h \
+sql.h system.h asn1/asn1.h io/hpackio.h language/language.h
+
+$(STMP)tags.o:	tags.c defs.h error.h hpacklib.h system.h tags.h io/fastio.h
+
+#$(STMP)amiga.o:	defs.h error.h flags.h frontend.h hpacklib.h system.h tags.h \
+#io/hpackio.h system/amiga.c
+$(STMP)amiga.o:	system/amiga.c error.h filesys.h flags.h frontend.h system.h tags.h \
+hpacklib.h io/hpackio.h io/fastio.h crc/crc16.h language/language.h
+
+$(STMP)viewfile.o:	viewfile.c arcdir.h choice.h defs.h error.h filehdr.h flags.h \
+frontend.h hpacklib.h sql.h system.h tags.h wildcard.h asn1/asn1.h io/fastio.h \
+io/hpackio.h language/language.h
+
+$(STMP)wildcard.o:	wildcard.c defs.h error.h system.h wildcard.h
+
+$(STMP)asn1.o:	asn1/asn1.c defs.h error.h hpacklib.h asn1/asn1.h asn1/ber.h io/fastio.h
+
+$(STMP)memmgr.o:	asn1/memmgr.c defs.h hpacklib.h system.h asn1/memmgr.h
+
+$(STMP)pemcode.o:	asn1/pemcode.c defs.h error.h frontend.h hpacklib.h script.h io/fastio.h
+
+$(STMP)pemparse.o:	asn1/pemparse.c defs.h script.h asn1/pemcode.h
+
+$(STMP)crc16.o:	crc/crc16.c defs.h
+
+$(STMP)crypt.o:	crypt/crypt.c choice.h defs.h error.h filesys.h flags.h frontend.h \
+hpacklib.h system.h crc/crc16.h crypt/crypt.h crypt/keymgmt.h crypt/md5.h \
+crypt/mdc.h crypt/packet.h crypt/rsa.h crypt/shs.h io/fastio.h io/hpackio.h \
+language/language.h
+
+$(STMP)keymgmt.o:	crypt/keymgmt.c defs.h error.h frontend.h hpacklib.h system.h crc/crc16.h \
+crypt/crypt.h crypt/md5.h crypt/mdc.h crypt/keymgmt.h crypt/shs.h io/fastio.h \
+io/hpackio.h language/language.h
+
+$(STMP)md5.o:	crypt/md5.c defs.h crypt/md5.h crypt/mdc.h
+
+$(STMP)mdc.o:	crypt/mdc.c defs.h error.h hpacklib.h crypt/crypt.h crypt/md5.h crypt/mdc.h \
+crypt/shs.h
+
+$(STMP)rsa.o:	crypt/rsa.c defs.h crypt/keymgmt.h crypt/rsa.h crypt/rsadef.h
+
+$(STMP)shs.o:	crypt/shs.c defs.h crypt/mdc.h crypt/shs.h
+
+$(STMP)display.o:	io/display.c defs.h frontend.h hpacklib.h
+
+$(STMP)fastio.o:	io/fastio.c arcdir.h defs.h error.h filehdr.h flags.h frontend.h \
+hpacklib.h system.h crc/crc16.h asn1/asn1.h crypt/crypt.h data/ebcdic.h \
+io/fastio.h io/hpackio.h
+
+$(STMP)stream.o:	io/stream.c defs.h hpacklib.h crc/crc16.h crypt/crypt.h io/stream.h
+
+$(STMP)language.o:	language/language.c defs.h error.h filehdr.h frontend.h hpacklib.h system.h \
+asn1/asn1.h io/fastio.h io/hpackio.h language/language.h
+
+$(STMP)lza.o:	lza/lza.c defs.h choice.h error.h flags.h hpacklib.h system.h crc/crc16.h \
+crypt/crypt.h io/fastio.h io/hpackio.h lza/model.h lza/model2.h lza/model3.h \
+lza/model4.h
+
+$(STMP)model.o:	lza/model.c defs.h error.h flags.h hpacklib.h io/hpackio.h lza/model.h
+
+$(STMP)model2.o:	lza/model2.c defs.h lza/model2.h
+
+$(STMP)model3.o:	lza/model3.c defs.h lza/model3.h
+
+$(STMP)model4.o:	lza/model4.c defs.h lza/model4.h
+
+$(STMP)pack.o:	lza/pack.c defs.h io/hpackio.h io/fastio.h
+
+$(STMP)unpack.o:	lza/unpack.c defs.h crc/crc16.h io/hpackio.h io/fastio.h lza/model.h
+
+$(STMP)store.o:	store/store.c defs.h error.h hpacklib.h system.h crc/crc16.h crypt/crypt.h \
+io/fastio.h io/hpackio.h store/store.h
+
+#$(EXE):	$(OBJECTS) $(GST)
+$(EXE):	$(OBJECTS)
+	sc link to T:$(EXE) <WITH <
+$(OBJECTS)
+<
+	Copy T:$(EXE) TO $(EXE)
+	slink $(EXE) to T:$(EXE) nd verbose
+
+#$Log$ 

@@ -1,0 +1,11 @@
+default:
+	@echo off
+	@echo .
+	@echo This isn't actually a proper makefile - just uncomment one of the lines in
+    @echo this file to handle your particular compiler.  They are a variation on:
+    @echo     cc -o keycvt *.c
+
+# For Borland C: 
+#   bcc -G -Z -ms -ekeycvt.exe *.c
+# For gcc:
+#   gcc -o keycvt *.c

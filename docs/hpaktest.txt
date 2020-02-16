@@ -1,0 +1,299 @@
+                  The HPACK Purity Test - 134 Question Version
+                  ============================================
+                               Updated 19/09/92
+
+Version Tested: [ 0.79          ]   Date/Time tested: [  /  /93,   :  ]
+---------------                     -----------------
+                              
+Basic Functions:
+----------------
+
+ 1.[ ] [A] - Add files to archive.  Create a new archive and add files to it.
+ 2.[ ] [X] - Extract files from an existing archive.  Files extracted should
+              have the modification date of the original file.
+ 3.[ ] [V] - View list of files inside archive.
+ 4.[ ] [T] - Test integrity of files within archive.
+ 5.[ ] [P] - Extract files within archive to screen.
+    
+Extended Basic Functions:
+-------------------------
+
+ 6.[ ] [A] - Add more files to an existing archive.
+       [D] - Delete files from an archive.  Cases for deletion:
+ 7.[ ]       1. Delete first file in archive.
+ 8.[ ]       2. Delete file(s) from middle of archive.
+ 9.[ ]       3. Delete last file in archive.
+10.[ ]       4. Delete multiple blocks of files.
+       [F] - Freshen files in archive.  Cases for freshen:   
+11.[ ]       1. Freshen first file in archive.
+12.[ ]       2. Freshen file(s) from middle of archive.
+13.[ ]       3. Freshen last file in archive.
+14.[ ]       4. Freshen multiple blocks of files.
+       [R] - Replace files in archive.  Cases for replace:
+15.[ ]       1. Replace first file in archive.
+16.[ ]       2. Replace file(s) from middle of archive.
+17.[ ]       3. Replace last file in archive.
+18.[ ]       4. Replace multiple blocks of files.
+       [U] - Update files to archive.  Cases for update:
+19.[ ]       1. Update first file in archive.
+20.[ ]       2. Update file(s) from middle of archive.
+21.[ ]       3. Update last file in archive.
+22.[ ]       4. Update multiple blocks of files.
+       
+Options:
+--------
+
+23.[ ] -0 - Store files without compression.  All files should be added without
+             any compression being attempted.
+       -a - Store attributes.  4 cases:
+24.[ ]      1.  Store attributes on archiving.
+25.[ ]      2.  Restore attributes on dearchiving.
+26.[ ]      3.  Store directory attributes with -p flag.
+27.[ ]      4.  Restore directory attributes with -p flag (not possible under
+                MSDOS).
+       -b - Specify base path to work off.  Two cases:
+28.[ ]      1.  Adding to archive:  All files should be treated as being off
+                the given base path.
+29.[ ]      2.  Extracting from archive:  All files should be extracted to this
+                base path.
+       -c - Encrypt data.  See special section on encryption below.
+       -d - Directory options.  Six cases (three for store paths, three for
+             extra options):       
+30.[ ]      1.  The View option should show the files by the directories they
+                are in.
+31.[ ]      2.  The Extract option should create the directories before the
+                extraction is done.
+32.[ ]      3.  The Test, Display options should show the full path for the
+                files being processed.
+33.[ ]      4.  Add all paths.  All paths, even those containing no files,
+                should be added to the archive.
+34.[ ]      5.  Extract all paths.  All paths, even those containing no files,
+                should be extracted from the archive.
+35.[ ]      5.  Add no paths - if the path isn't already in the archive, exit
+                with an error message.
+36.[ ]      6.  Incorrect option given:  Error message should indicate that an
+                incorrect directory option has been given.
+37.[ ] -e - Error recovery information.  This should be written for all files
+             specified, and consist of an error ID, the fileheader, and the
+             filename.
+       -i - Interactive mode - prompt for each file before taking any action.
+             6 cases:
+38.[ ]      1.  Adding to archive.
+39.[ ]      2.  Extracting from archive.
+40.[ ]      3.  Testing/viewing file in archive.
+41.[ ]      4.  Deleting from archive.
+42.[ ]      5.  Freshening to archive.
+43.[ ]      6.  Replacing to archive.
+44.[ ]      7.  Answer 'Y' processes the file being prompted for.
+45.[ ]      8.  Answer 'N' skips the file being prompted for.
+46.[ ]      9.  Answer 'A' processes this and all following files.
+       -j - Move files.  Four cases:
+47.[ ]      1.  Add/Freshen/Replace/Update with move: Files should be deleted
+                after archive is created.
+48.[ ]      2.  Add with move, encryption: Files should be physically
+                annihilated not just deleted.
+49.[ ]      3.  Extract with move: Files should be deleted from archive after
+                extraction.
+50.[ ]      4.  If move on a unit-compressed or encrypted archive is given, an
+                error message should be printed.
+51.[ ] -k - Overwrite an existing archive.  Existing archive should be deleted 
+             and a new one created.
+       -l - Add security information.  2 cases:
+52.[ ]      1.  Add security information for entire archive.
+53.[ ]      2.  Add security information for individual files.
+54.[ ]      Individually secured files should be shown as such when the View
+            option is used.
+55.[ ]      Secured files/archives should be tested for integrity when the 
+            Extract/Test/Display options are used.
+       -m - Multipart archives.
+56.[ ]      1.  Create multipart archive.  When the disk is full, the multipart
+                trailer should be added and a new disk requested.
+57.[ ]      2.  Segment size of <512 bytes:  If the segment is less than 512
+                bytes long, it should be deleted and a new (emptier) disk
+                requested).
+58.[ ]      3.  If a multipart archive contains only one segment, it should be
+                stored as a normal archive.
+59.[ ]      4.  If the trailer would be split over two disks, the entire
+                trailer should be moved to a new disk and the seperate trailer
+                flag set.
+60.[ ]      4.  On reading an archive the last segment should be requested if a
+                multipart archive is detected.
+61.[ ]      5.  Currently unimplemented:  Once the last segment is acquired
+                HPACK should read the directory information (moving to the
+                previous disk if the seperate trailer flag is set).
+62.[ ]      6.  When files are on seperate disks (eg disk #1, #3, and #8), only
+                those disks should be requested; unused disks can be skipped.
+       -o - Overwrite on extract options.  6 cases:
+63.[ ]      1.  Overwrite all:  All files on extraction should overwrite 
+                existing files on disk.
+64.[ ]      2.  Overwrite none: No files on extraction should overwrite 
+                existing files on disk.
+65.[ ]      3.  Overwrite smart:  Files on extraction should be given a unique
+                name based on the actual name so that they don't clash with any
+                file already on disk.
+66.[ ]      4.  Name prompt:  The user should be prompted for a new name for 
+                the file.
+67.[ ]      6.  No option given:  The user is asked to confirm overwriting for
+                each individual case.
+68.[ ]      5.  Incorrect option given:  Error message should indicate that an
+                incorrect overwrite option has been given.
+69.[ ] -r - Recurse subdirectories.  All subdirectories below the given one 
+             should be scanned for files.
+70.[ ] -s - Stealth mode.  All non-error and non-warning type messages should
+             be suppressed.
+71.[ ] -t - Files extracted should have the current date and not the 
+             modification date.
+       -u - Unit-compressed archives.  3 cases:
+72.[ ]      1.  All files should be compressed without the compressor being
+                 reset.  If there are many small, similar files this will
+                 result in a noticeable increase in compression.
+73.[ ]      2.  Unit-compressed files should be extracted as normal, if any
+                 files are skipped they should be extracted in test mode as if
+                 'T' had been used instead of 'P'.
+74.[ ]      3.  Any attempt to modify a unit-compressed archive should result
+                 in an error being printed.
+       -v - View options.  4 cases:
+75.[ ]      1.  View files only.
+76.[ ]      2.  View list of subdirectories in directories only.
+77.[ ]      4.  Sort files before displaying them.
+78.[ ]      5.  Incorrect option given:  Error message should indicate that an
+                 incorrect view option has been given.
+       -w - Archive comment options. 4 cases:
+79.[ ]      1.  Files added with the -w option should inhabit their own
+                namespace and not clash with existing files.
+80.[ ]      2.  Delete, freshen, replace options should not work on comment
+                files; to work on comment files the -w option needs to be
+                given.
+81.[ ]      3.  The view files option should display comment files (if 
+                possible) or skip them (if the format cannot be handled).
+                Comment files should not be included in the count of data
+                files.
+82.[ ]      4.  Text comments when displayed should be converted to ASCII-only 
+                (or the local equivalent on the machine being used), be word 
+                wrapped at the current screen width, and recognise the simple
+                formatting options given in HPACKEXT.DOC.
+       -x - Extract options.  7 cases:
+83.[ ]      1.  Translate LF -> Local EOL delimiter.
+84.[ ]      2.  Translate CR -> Local EOL delimiter.
+85.[ ]      3.  Translate CRLF -> Local EOL delimiter.
+86.[ ]      4.  Treat 1 or 2-digit hex value as EOF symbol; xlate this to the
+                local EOL delimiter.
+87.[ ]      5.  Translate from EBCDIC -> ASCII.
+88.[ ]      6.  Translate from Pr1ime ASCII (high bit set so they could save a
+                75c IC in their serial driver) -> normal ASCII.
+89.[ ]      7.  Translate from ASCII -> ASCII.
+90.[ ]  -z - System-specific special options.  Print error message if no
+             options, otherwise results are system-specific.
+                
+Complex options:
+----------------
+    
+       -rd - Recurse and store paths.  3 cases:
+91.[ ]      1.  The View option should show the files by the directories they 
+                are in.
+92.[ ]      2.  The Extract option should create the directories before the 
+                extraction is done.
+93.[ ]      3.  The Test, Display options should show the full path for the
+                files being processed.
+       -rd with Add - 2 cases:
+94.[ ]      1.  Added directories should be added to directories in archive if
+                they don't already exist.
+95.[ ]      2.  When directories are added to the middle of the directory tree,
+                it should be rearranged into an inorder traversal with 
+                contiguous directory indices before being written to disk.
+96.[ ] -ard with Add - Add directories with flags.  When directory tags are 
+                added to the middle of the directory tree, the directory tags 
+                should be reordered when the directory tree is rebuilt.
+       More complex options are assumed OK provided they have been checked for
+       the individual-archive cases.
+        
+Listfiles:
+----------
+
+97.[ ] Args beginning with an @ should be treated as listfiles.
+98.[ ] Comments and leading whitespace in a listfile should be ignored.
+99.[ ] A warning is printed for over-long paths/illegal chars.
+100.[ ] Valid paths are added to the argument list as if they had been entered
+        from the command-line.
+101.[ ] If warnings were issued, once the listfile has been processed or the
+        number of warning passses a certain threshold, exit with an error
+        count.
+
+Encryption/Authentication:
+--------------------------
+
+       Individual encryption options:
+102.[ ] -c  The user should be asked for a password of between 8 and 80 chars,
+        -ca and the entire archive should be encrypted.
+103.[ ] -ci The user should be asked for a password of between 8 and 80 chars,
+            and individual files should be encrypted.
+104.[ ] -cs The user should be asked for a secondary password as well as the
+            main password and the archive directory and file data encrypted
+            seperately using the two passwords.
+105.[ ] -cpa The given userID should be used to public-key encrypt the entire
+            archive.
+106.[ ] -cpi The given userID should be used to public-key encrypt individual
+            files.
+107.[ ] -cps The given userID should be used as a secondary ID as per -cs.
+108.[ ]     Individually encrypted files should be show as encrypted when using
+            the View option.
+109.[ ]     Individually encrypted files which are also secured should be
+            shown as encrypted and secured when using the View option.
+110.[ ]     Decryption with -c for a conventional-key encrypted archive should
+            request the decryption password from the user.
+111.[ ]     Decryption with -c for a dual-conventional-key encrypted archive
+            should request the secondary key from the user.
+112.[ ]     Decryption with -c for a public-key encrypted archive should
+            require no password from the user since the key management is
+            automatic.
+       UserID handling:
+113.[ ]     If a list of comma-seperated userID's is given, one PKE packet per
+            userID should be created to allow decryption by multiple
+            recipients.
+114.[ ]     If a userID is given in hex, the hex fragment should be matched
+            against the keyID rather than the userID.
+115.[ ]     If the secret key is encrypted with an algorithm HPACK can decrypt,
+            the user should be given three attempts at a decryption password to
+            decrypt the key.
+       Error handling:
+116.[ ]     Encrypted individual files should be skipped on Extract/Test/
+            Display if no -c option is given.
+117.[ ]     Encrypted archives should be skipped if no -c option is given.
+118.[ ]     If no userID is given for public-key encryption, an error message
+            about the missing userID should be printed.
+119.[ ]     If a wrong userID is given for public-key encryption, an error
+            message about the userID not being found on the keyring should be
+            printed.
+120.[ ]     Decryption with the wrong conventional-key password should result
+            in a warning about a possibly incorrect password and give the
+            user the option of quitting.
+
+Error Handling and Misc:
+------------------------
+
+121.[ ] Wildcards should work for archives, files, and listfiles.
+122.[ ] A help screen should be displayed if HPACK is invoked with no args.
+123.[ ] Detection of non-HPACK archives:  An error message should be printed.
+124.[ ] Adding an archive to itself:  The archive should be skipped.  Care
+        should be taken to ensure this works with aliased pathnames, for
+        example /A/B/C and ../C may be the same file.
+125.[ ] On extraction, a file with the name of the directory tp be extracted
+        already exists: The directory should be skipped along with all files
+        and directories in it, and a warning issued.
+126.[ ] Unknown command: Indicate via an error message.
+127.[ ] Data errors:  A warning message should be printed in the case of
+        corrupted data.
+128.[ ] -k with [D], [R], [F], [U] - Error message should indicate that the
+        archive to change would be deleted.
+129.[ ] Disk full (without multipart archive specified) and similar errors:  
+        The original archive should be restored fully, all temporary files
+        deleted, and HPACK should exit with an error message.
+130.[ ] User interrupt:  Exit with error message.
+131.[ ] Command results in no action to take:  Indicate to the user via an
+        error message.
+132.[ ] No files in archive:  HPACK should correctly handle the case of there
+        being only directories (but no files) in an archive.
+133.[ ] At least two Easter Egg features are included in the executable, none
+        of which should be easily found.
+134.[ ] The program has been used for at least 10 minutes by 'ward.  This
+        ensures the code is both crash-proof and idiot-proof :-).

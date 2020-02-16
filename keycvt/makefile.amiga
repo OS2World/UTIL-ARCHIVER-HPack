@@ -1,0 +1,50 @@
+#****************************************************************************
+#*																			*
+#*		  Makefile for the Amiga version of the the KEYCVT utility			*
+#*																			*
+#****************************************************************************
+
+PROJ	= keycvt
+
+CC		= sc
+
+LFLAGS	= link pname $(PROJ)
+
+OUTPATH	= STmp/				# Where object files go (/tmp is a good place)
+OBJ		= .o				# Extension for object files
+EXE		=					# Extension for executables
+
+LD		= $(CC)				# Linker (just use the C compiler)
+ECHO	= echo				# Echo to screen command
+
+#****************************************************************************
+#*																			*
+#*			If no args are given, print a usage message and exit			*
+#*																			*
+#****************************************************************************
+
+all:	$(PROJ)$(EXE)
+
+.c.o:
+	sc objname $(OUTPATH)$>.o $*.c
+	-xpack method nuke.100 $(OUTPATH)$>.o
+	-delete :kan/$>.q :kan/$>.s :kan/$>.o :kan/$>.q.00
+
+love:
+		@$(ECHO) "Nicht wahr?"
+		@$(ECHO)
+
+#****************************************************************************
+#*																			*
+#*								Rules to build KEYCVT						*
+#*																			*
+#****************************************************************************
+
+$(OUTPATH)md5$(OBJ):		md5.c md5.h
+$(OUTPATH)mdc$(OBJ):		mdc.c md5.h mdc.h
+$(OUTPATH)idea$(OBJ):		idea.c md5.h
+$(OUTPATH)keycvt$(OBJ):		keycvt.c md5.h mdc.h
+
+$(PROJ)$(EXE):	$(OUTPATH)md5$(OBJ) $(OUTPATH)mdc$(OBJ) $(OUTPATH)idea$(OBJ) $(OUTPATH)keycvt$(OBJ)
+		@$(LD) $(LFLAGS) $(OUTPATH)md5$(OBJ) $(OUTPATH)mdc$(OBJ) $(OUTPATH)idea$(OBJ) $(OUTPATH)keycvt$(OBJ)
+-delete $(PROJ).lnk

@@ -1,0 +1,136 @@
+Basics:
+-------
+
+All directories can be referred to either by name or by a a magic number (the
+directory ID).  Either can be used, but the preferred way is to use the
+directory ID.  Some of the functions refer to this ID, some use pointers to
+directory or file headers.  As an example, getParent() takes an ID and
+returns the ID of the parent directory.  Other functions return either a
+FILEHDRLIST or DIRHDRLIST pointer which point directly at the file or
+directory headers (which contains filenames, timestamps, data sizes, file
+types, etc etc).
+
+To display a directory, use the code in GUI.C.  This works roughly as follows:
+
+call getFirstDirEntry() to get the first directory in dirPtr;
+while( dirPtr != NULL )
+	call getNextDirEntry() to get next directory in dirPtr;
+
+call getFirstFileEntry() to get first file in filePtr;
+while( filePtr != NULL )
+	call getNextFileEntry() to get next directory in filePtr;
+
+To get the previous directory/file, call getPrevDirEntry(),
+getPrevFileEntry().
+
+There are various functions in ARCDIR.C to do this, and other housekeeping
+stuff like:
+
+WORD getParent( WORD dirNo )
+	Returns the ID of the parent directory of the given directory ID.
+char *getDirName( WORD dirNo )
+	Returns the name of the directory with the given directory ID.
+LONG getDirTime( WORD dirNo )
+	Returns the timestamp of the directory with the given directory ID.
+void setDirTime( WORD dirNo, LONG timeStamp )
+	Sets the timestamp for the directory with the given directory ID.
+
+void sortFiles( WORD dirNo )
+	Sort the files in a given directory by name.  Note that this changes the
+	order so it no longer corresponds to the order of the data in the archive.
+
+FILEHDRLIST *getFirstFileEntry( const WORD dirNo )
+	Returns the first file entry in the current directory, or NULL if none.
+FILEHDRLIST *getNextFileEntry( void )
+	Returns the next file entry in the current directory, or NULL if none.
+FILEHDRLIST *getPrevFileEntry( void )
+	Returns the previous file entry in the current directory, or NULL if none.
+
+DIRHDRLIST *getFirstDirEntry( const WORD dirNo )
+	Returns the first directory entry in the current directory, or NULL if
+	none.
+DIRHDRLIST *getNextDirEntry( void )
+	Returns the next directory entry in the current directory, or NULL if
+	none.
+DIRHDRLIST *getPrevDirEntry( void )
+	Returns the previous directory entry current directory, or NULL if none.
+
+int matchPath( const char *pathName, const int pathLen, WORD *pathDirIndex )
+	Determines whether the path 'pathName' of length 'pathLen' is in the
+	archive directory structure.  Returns the directory ID in 'pathDirIndex'.
+	Basically used to go from dir.path -> dir.ID.  Returns PATH_FULLMATCH if
+	the path is in the archive, PATH_PARTIALMATCH is part of the path is in
+	the archive, and PATH_NOMATCH if none of the path is in the archive.
+
+void selectFile( FILEHDRLIST *fileHeader, BOOLEAN status )
+	Selects a file, where 'status' is TRUE to select it, FALSE to unselect it.
+void selectDir( DIRHDRLIST *dirHeader, BOOLEAN status )
+	Selects this directory and all files and directories it contains.
+	'status' is TRUE to select the directory and all files it contains, FALSE
+	to unselect the directory and all files it contains.  NB Haven't tested
+	this one yet but it's based on fixEverything() so it should work.
+
+General Menu Layout:
+--------------------
+
+The options menu is laid out as follows:
+
+  Encryption...
+    Conventional-key encryption
+      Get main password;
+      Get secondary password (optional);
+        If secondary userID/password given:
+                -> cryptFlags |= CRYPT_SEC | CRYPT_CKE_ALL;
+    Public-key encryption
+      Get main userID, point char *mainUserID to it;
+      Get secondary userID (optional), point char *secUserID to it;
+        If secondary userID/password given:
+                -> cryptFlags |= CRYPT_SEC | CRYPT_PKE_ALL;
+    Encrypt entire archive 
+                -> cryptFlags |= CRYPT_{CKE,PKE}_ALL;
+    Encrypt individual files    
+                -> cryptFlags |= CRYPT_{CKE,PKE}
+  Authentication...
+    Get userID, point char *signUserID to it;
+    Secure entire archive
+                -> cryptFlags |= CRYPT_SIGN_ALL;
+    Secure individual files
+                -> cryptFlags |= CRYPT_SIGN;
+  Overwrite options:
+    All         -> overwriteFlags |= OVERWRITE_ALL;
+    None        -> overwriteFlags |= OVERWRITE_NONE;
+    Smart       -> overwriteFlags |= OVERWRITE_SMART;
+    Prompt      -> overwriteFlags |= OVERWRITE_PROMPT;
+  Translate options:
+    Smart       -> xlateFlags = XLATE_SMART;
+    CR          -> xlateFlags |= XLATE_EOL;
+                   lineEndChar = '\r';
+    LF          -> xlateFlags |= XLATE_EOL;
+                   lineEndChar = '\n';
+    CRLF        -> xlateFlags |= XLATE_EOL;
+                   lineEndChar = '\r' | 0x80;
+    EBCDIC      -> xlateFlags |= XLATE_EBCDIC;
+    Prime       -> xlateFlags |= XLATE_PRIME;
+    ASCII       -> 
+    Hex const   -> xlateFlags |= XLATE_EOL;
+                   lineEndChar = hex byte;
+  Miscellaneous options:
+    Stealth mode -> flags |= STEALTH_MODE;
+    Touch file on extraction
+                -> flags |= TOUCH_FILES;
+    Create multipart archive
+                -> flags |= MULTIPART_ARCH;
+    Add error recovery information
+                -> flags |= ERROR_RECOVER;
+    Store file/directory attributes
+                -> flags |= STORE_ATTR;
+    Interactive mode
+                -> flags |= CONFIRM_ALL;
+    Store all directories
+                -> dirFlags |= DIR_ALLPATHS;
+    Don't create directories within archive
+                -> dirFlags |= DIR_NOCREATE;
+  Extract to...
+    Set char basePath[], int basePathLen;
+
+This layout is shown in the resource files and GIF pictures.
